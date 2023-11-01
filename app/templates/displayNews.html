@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}News{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid pt-3 bg-body-tertiary">
+    <div class="container col-lg-10">
+        <div>
+            <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">News</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4 col-lg-10">
+    <h1 class="display-5 lead text-center">Latest News</h1>
+
+    <!-- Display each news item -->
+    <div class="container my-5 col-md-10 col-sm-10">
+        {% for item in news %}
+        <div class="card my-5">
+            <div class="card-header">
+                <h3>{{ item['title'] }}</h3><small>{{ item['publishDate'].strftime('%Y-%m-%d %H:%M:%S') }}</small>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ item['content']|replace("\n", "<br>")|safe}}</p>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not news %}
+        <div class="alert alert-info" role="alert">
+            No news or updates at the moment.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

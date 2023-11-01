@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container w-50 m-auto mt-5 pt-5">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="fs-5">Choose the branch</h1>
+        </div>
+        <form method="POST" action="/chooseBranch" id="edit-form" class="needs-validation" novalidate>
+            <div class="card-body">
+                <div class="row g-3">
+
+                    <div class="col-sm-6">
+
+                        <label for="title" class="form-label">Branch Name</label>
+                        <select class="form-select col-sm-6" name="branchChoosed" aria-label="branchChoosed" required>
+                            <option value="" selected disabled>Please select</option>
+                            {% for i in branchList%}
+                            {%if session['branch']%}
+                            {%if session['branch']|int == i['branchID'] %}
+                            <option value="{{i['branchID']}}" disabled>{{i['city']}} {{i['branchName']}} (Now)</option>
+                            {%else%}
+                            <option value="{{i['branchID']}}">{{i['city']}} {{i['branchName']}}</option>
+                            {%endif%}{%else%}
+                            <option value="{{i['branchID']}}">{{i['city']}} {{i['branchName']}}</option>
+
+                            {%endif%}
+
+                            {%endfor%}
+                        </select>
+                        <div class="invalid-feedback">
+                            Invalid.
+                        </div>
+                    </div>
+
+
+                    <div class="alert alert-danger text-center" role="alert">
+                        If you are changing the branch, your previous shopping cart will be reset!
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Go!</button>
+                <a href="/menu" class="btn btn-secondary">Cancel</a>
+            </div>
+
+
+        </form>
+
+
+    </div>
+    <br><br><br><br><br>
+</div>
+
+</form>
+
+
+<script>
+    (() => {
+        'use strict'
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        const forms = document.querySelectorAll('.needs-validation')
+
+        // Loop over them and prevent submission
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+</script>
+
+
+
+{% endblock %}

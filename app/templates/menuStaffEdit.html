@@ -1,0 +1,895 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit order {{orderID}}{% endblock %}
+
+{% block content %}
+
+<script>
+    const nationalPizzasData = {{ national_pizzas | tojson | safe }};
+    const branchPizzasData = {{ branch_pizzas | tojson | safe }};
+    const nationalSideOfferingsData = {{ national_side_offerings | tojson | safe }};
+    const branchSideOfferingsData = {{ branch_side_offerings | tojson | safe }};
+    const nationalDrinksData = {{ national_drinks | tojson | safe }};
+    const branchDrinksData = {{ branch_drinks | tojson | safe }};
+    const toppingsData = {{ toppings | tojson | safe }};
+</script>
+
+<div class="">
+
+    <div class="">
+        <div class="position-relative text-center bg-dark"
+            style="background-image: url({{ url_for('static', filename='index/banner1.png') }}); background-size: cover; background-position: center; padding: 100px 0;">
+            <!-- Overlay to make the image darker using bg-dark and opacity-50 -->
+            <div class="position-absolute top-0 start-0 w-100 h-100 bg-black opacity-50"></div>
+
+            <!-- Text using text-white for white color -->
+            <h1 class="display-5 text-white position-relative">{{branches.city}} {{ branches.branchName }}
+            </h1>
+            <div class="container py-2">
+                <h5 class="text-white position-relative"><strong>You are currently editing: Order {{orderID}}</strong></h5>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-3">
+        <div class="row" id="app">
+            <div class="col-md-9">
+                <div class="position-sticky" style="top:70px; z-index: 1; background-color:floralwhite">
+                    <div class="py-3">
+                        <!-- navbar tabs to show pizzas, sides and drinks seperately-->
+                        <ul class="nav nav-pills my-2 mx-2" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pills-home-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pills-combo" type="button" role="tab" aria-controls="pills-home"
+                                    aria-selected="true"><strong>Combo Deals</strong></button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home"
+                                    aria-selected="true"><strong>PIZZAS</strong></button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pills-profile" type="button" role="tab"
+                                    aria-controls="pills-profile" aria-selected="false"><strong>SIDES</strong></button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pills-contact-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pills-contact" type="button" role="tab"
+                                    aria-controls="pills-contact" aria-selected="false"><strong>DRINKS</strong></button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="pills-tabContent">
+
+                    <!-- Pizzas -->
+                    <div class="tab-pane fade show active" id="pills-home" role="tabpanel"
+                        aria-labelledby="pills-home-tab" tabindex="0">
+                        <!-- Featured Pizzas -->
+                        <h1 :style="{opacity}" style="color:rgb(24, 123, 20)" class="text-center mb-4"><strong>Branch Features</strong></h1>
+                        <div class="row">
+                            <div class="col-md-4 my-2" v-for="product in branchPizzas">
+                                <div class="card my-2">
+                                    <!-- Displaying pizza image -->
+                                    <img :src="basePath + product.id + '.jpg'" alt="Pizza Image" class="card-img-top" alt="Pizza Image" 
+                                    @click="showImgModalBP(product.id)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+                                    <button class="badge rounded-pill bg-success badge--xs badge--top-right"
+                                        data-bs-toggle="modal" :data-bs-target="'#customizeModal' + product.id">Customize</button>
+
+                                    <!-- Modal -->
+                                    <div class="modal fade" :id="'customizeModal' + product.id" tabindex="-1"
+                                        aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header p-1">
+                                                    <img :src="basePath + product.id + '.jpg'" alt="Pizza Image" class="card-img-top">
+                                                    
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="z-index: 99; position: absolute; top: 10px; right: 10px;"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <h5 class="modal-title" id="exampleModalLabel">
+                                                        [[ product.name ]]
+                                                    </h5>
+                                                    <select class="form-select mb-3" v-model="product.selectedSize">
+                                                        <option v-for="size in product.sizes" :value="size">[[ size.label ]] - $[[ size.price ]]                                                            
+                                                        </option>
+                                                    </select>
+                                                    <div class="card my-2">
+                                                        <p class="d-inline-flex gap-1">
+                                                            <button class="btn col-12" type="button" data-bs-toggle="collapse"
+                                                                data-bs-target="#toppings-collapse" aria-expanded="false"
+                                                                aria-controls="collapseExample">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <h5 class="text-decoration-none">Edit toppings</h5>
+                                                                    <h5 class="text-decoration-none">...</h5>
+                                                                </div>
+                                                            </button>
+                                                        </p>
+                                                        <div class="collapse" id="toppings-collapse">
+                                                            <div class="d-flex justify-content-between align-items-center px-3 mb-3" v-for="topping in product['selectedToppings']">
+                                                                <div>
+                                                                    <span>[[ topping.name ]] - $[[ topping.price ]] </span>
+                                                                </div>
+                                                                <div>
+                                                                    <button @click="removeTopping(product,topping)" class="topping-btn"><i class="fas fa-minus remove-btn"></i></button>
+                                                                    <span>[[ topping.quantity ]]</span>
+                                                                    <button @click="addTopping(product,topping)"  class="topping-btn"><i class="fas fa-plus add-btn"></i></button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Close</button>
+                                                    <button type="button" class="btn btn-primary"
+                                                        @click="addToCartWithToppings(product)"
+                                                        data-bs-dismiss="modal">Add to Cart</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-body ">
+                                        <h5 class="card-title">[[ product.name ]]</h5>
+                                        <p class="card-text">[[ product.description ]]</p>
+                                        <select class="form-select mb-3" v-model="product.selectedSize">
+                                            <option v-for="size in product.sizes" :value="size">[[ size.label ]] - $[[
+                                                size.price ]]</option>
+                                        </select>
+                                        <button class="btn btn-success" @click="addToCartWithToppings(product)">Add to Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br><br>
+                        <hr>
+
+                        <!-- national Pizzas -->
+                        <h1 class="text-center mb-4"><strong>Pizzas</strong></h1>
+                        <div class="row">
+                            <div class="col-md-4 my-2" v-for="product in nationalPizzas">
+                                <div class="card my-2">
+                                    <img :src="basePath + product.id + '.jpg'" alt="Pizza Image" class="card-img-top" @click="showImgModalNP(product.id)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+                                    <button class="badge rounded-pill bg-success badge--xs badge--top-right"
+                                        data-bs-toggle="modal" :data-bs-target="'#customizeModal' + product.id">Customize</button>
+
+                                    <!-- Modal -->
+                                    <div class="modal fade" :id="'customizeModal' + product.id" tabindex="-1"
+                                        aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header p-1">
+                                                    <img :src="basePath + product.id + '.jpg'" alt="Pizza Image" class="card-img-top">
+                                                    
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="z-index: 99; position: absolute; top: 10px; right: 10px;"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <h5 class="modal-title" id="exampleModalLabel">
+                                                        [[ product.name ]]
+                                                    </h5>
+                                                    <select class="form-select mb-3" v-model="product.selectedSize">
+                                                        <option v-for="size in product.sizes" :value="size">[[ size.label ]] - $[[ size.price ]]                                                            
+                                                        </option>
+                                                    </select>
+                                                    <div class="card my-2">
+                                                        <p class="d-inline-flex gap-1">
+                                                            <button class="btn col-12" type="button" data-bs-toggle="collapse"
+                                                                data-bs-target="#toppings-collapse" aria-expanded="false"
+                                                                aria-controls="collapseExample">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <h5 class="text-decoration-none">Edit toppings</h5>
+                                                                    <h5 class="text-decoration-none">...</h5>
+                                                                </div>
+                                                            </button>
+                                                        </p>
+                                                        <div class="collapse" id="toppings-collapse">
+                                                            <div class="d-flex justify-content-between align-items-center px-3 mb-3" v-for="topping in product['selectedToppings']">
+                                                                <div>
+                                                                    <span>[[ topping.name ]] - $[[ topping.price ]] </span>
+                                                                </div>
+                                                                <div>
+                                                                    <button @click="removeTopping(product,topping)" class="topping-btn"><i class="fas fa-minus remove-btn"></i></button>
+                                                                    <span>[[ topping.quantity ]]</span>
+                                                                    <button @click="addTopping(product,topping)"  class="topping-btn"><i class="fas fa-plus add-btn"></i></button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Close</button>
+                                                    <button type="button" class="btn btn-primary"
+                                                        @click="addToCartWithToppings(product)"
+                                                        data-bs-dismiss="modal">Add to Cart</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-body ">
+                                        <h5 class="card-title">[[ product.name ]]</h5>
+                                        <p class="card-text">[[ product.description ]]</p>
+                                        <select class="form-select mb-3" v-model="product.selectedSize">
+                                            <option v-for="size in product.sizes" :value="size">[[ size.label ]] - $[[
+                                                size.price ]]</option>
+                                        </select>
+                                        <button class="btn btn-success" @click="addToCartWithToppings(product)">Add to Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- branch Pizza Image Modal -->
+                        <div class="modal fade" id="imageModalBP" tabindex="-1" aria-labelledby="imageBPModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageBPModalLabel">Pizza Image</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img :src="selectedBPizzaImage" alt="Pizza Image" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- N Pizza Image Modal -->
+                        <div class="modal fade" id="imageModalNP" tabindex="-1" aria-labelledby="imageNPModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageNPModalLabel">Pizza Image</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img :src="selectedNPizzaImage" alt="Pizza Image" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- Side Offerings -->
+                    <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab"
+                        tabindex="0">
+                        <!-- Branch Featured sideOfferings -->
+                        <h1 :style="{opacity}" style="color:rgb(24, 123, 20)" class="text-center mb-4"><strong>Branch Features</strong></h1>
+                        <div class="row">
+                            <div class="col-md-4  my-2" v-for="offering in branchSideOfferings">
+                                <div class="card">
+                                    <img :src="basePath + offering.id + '.jpg'" alt="sideOfferings Image"
+                                        class="card-img-top" @click="showImgModalBSO(offering.id)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+                                    <div class="card-body">
+                                        <h5 class="card-title">[[ offering.name ]]</h5>
+                                        <p class="card-text">[[ offering.description ]]</p>
+                                        <p class="card-text">Price: $[[ offering.price ]]</p>
+                                        <button class="btn btn-success" @click="addToCartSideOffering(offering)">Add to
+                                            Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br><br>
+                        <hr>
+                        <!-- national featured sideOfferings -->
+                        <h1 class="text-center mb-4"><strong>Side Offerings</strong></h1>
+                        <div class="row">
+                            <div class="col-md-4  my-2" v-for="offering in nationalSideOfferings">
+                                <div class="card">
+                                    <img :src="basePath + offering.id + '.jpg'" alt="sideOfferings Image"
+                                        class="card-img-top" @click="showImgModalNSO(offering.id)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+                                    <div class="card-body">
+                                        <h5 class="card-title">[[ offering.name ]]</h5>
+                                        <p class="card-text">[[ offering.description ]]</p>
+                                        <p class="card-text">Price: $[[ offering.price ]]</p>
+                                        <button class="btn btn-success" @click="addToCartSideOffering(offering)">Add to
+                                            Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- branch SO Image Modal -->
+                        <div class="modal fade" id="imageModalBSO" tabindex="-1" aria-labelledby="imageBSOModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageBSOModalLabel">Side Offering Image</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img :src="selectedBSOImage" alt="Side Offering Image" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- N SO Image Modal -->
+                        <div class="modal fade" id="imageModalNSO" tabindex="-1" aria-labelledby="imageNSOModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageNSOModalLabel">Side Offering Image</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img :src="selectedNSOImage" alt="Side Offering Image" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Drinks -->
+                    <div class="tab-pane fade" id="pills-contact" role="tabpanel" aria-labelledby="pills-contact-tab"
+                        tabindex="0">
+
+                        <!-- Branch Featured Drinks -->
+                        <!-- <h1 :style="{opacity}" style="color:rgb(24, 123, 20)" class="text-center mb-4"><strong>Branch Drinks</strong></h1>
+                        <div class="row">
+                            <div class="col-md-4 my-2" v-for="drink in branchDrinks">
+                                <div class="card">
+                                    <img :src="basePath + drink.id + '.jpg'" class="card-img-top" alt="Drinks Image"
+                                    @click="showImgModalBD(drink.id)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+                                    <div class="card-body">
+                                        <h5 class="card-title">[[ drink.name ]]</h5>
+                                        <p class="card-text">[[ drink.description ]]</p>
+                                        <p class="card-text">Price: $[[ drink.price ]]</p>
+                                        <button class="btn btn-success" @click="addToCartSideOffering(drink)">Add to Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br><br>
+                        <hr> -->
+
+                        <!-- national Drinks -->
+                        <h1 class="text-center mb-4"><strong>Drinks</strong></h1>
+                        <div class="row">
+                            <div class="col-md-4 my-2" v-for="drink in nationaDrinks">
+                                <div class="card">
+                                    <img :src="basePath + drink.id + '.jpg'" alt="Drinks Image" class="card-img-top" 
+                                    @click="showImgModalND(drink.id)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+                                    <div class="card-body">
+                                        <h5 class="card-title">[[ drink.name ]]</h5>
+                                        <p class="card-text">[[ drink.description ]]</p>
+                                        <p class="card-text">Price: $[[ drink.price ]]</p>
+                                        <button class="btn btn-success" @click="addToCartSideOffering(drink)">Add to
+                                            Cart</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- N Drink Image Modal -->
+                        <div class="modal fade" id="imageModalND" tabindex="-1" aria-labelledby="imageNDModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageNDModalLabel">Drink Image</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img :src="selectedNDImage" alt="Drink Image" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shopping cart -->
+            <div class="col-md-3">
+                <div class="py-3 shopping-cart">
+
+
+                    <!-- cart -->
+                    <div class="py-2 cart-card shadow">
+                        <div class="ms-2">
+                            <span style="font-size: 1.4rem; font-weight:500;">Your Cart</span>
+                        </div>
+                        <hr class="my-2" />
+                        <div class="">
+                            <div class="cart-content mb-0 keep-scrolling">
+                                <ul class="list-unstyled mb-0">
+                                    <li v-for="item in cart" class="cart-item mb-0 pb-0">
+                                        <div class="container px-2">
+                                            <div class="row mx-0">
+                                                <div class="col-7 p-0">
+                                                    <span class="block-left">
+                                                        <strong>[[ item.name ]]</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-2 p-0">
+                                                    <strong>x [[ item.number ]]</strong>
+                                                </div>
+                                                <div class="col-3 pe-1 d-flex justify-content-end" v-if="item.size">
+                                                    <strong>$[[ (item.size.price * item.number).toFixed(2) ]]</strong>
+                                                </div>
+                                                <div class="col-3 pe-1 d-flex justify-content-end" v-else>
+                                                    <strong>$[[ (item.price * item.number).toFixed(2) ]]</strong>
+                                                </div>
+                                                <!-- <div class="col-1 p-0 m-0 d-flex align-items-center justify-content-center">
+                                                    <button class="btn p-0 my-auto d-flex align-items-center justify-content-center text-danger" @click="removeFromCart(item)">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                                        </svg>
+                                                    </button>
+                                                </div> -->
+                                            </div>
+
+
+                                            <div v-if="item.size">
+                                                <ul>
+                                                    <li><strong>Size: </strong><span class="fw-light">[[
+                                                            item.size.label]]</span></li>
+                                                </ul>
+                                            </div>
+
+
+                                            <!-- Only show toppings if they exist and the length is greater than 0 -->
+                                            <div v-if="item.toppings && item.toppings.length">
+                                                <div class="row m-0">
+                                                    <div class="col-9">
+                                                        <strong>Topping Surcharge:</strong>
+                                                    </div>
+                                                    <div class="col-3 pe-1 d-flex justify-content-end">
+                                                        <strong>$[[(item.number *
+                                                            item.toppingPrice).toFixed(2)]]</strong>
+                                                    </div>
+                                                </div>
+                                                <ul>
+                                                    <li v-for="topping in item.toppings" class="fw-light"
+                                                        v-show="topping.quantity>0">
+                                                        [[ topping.name]] x [[topping.quantity]] - $[[
+                                                        (topping.price*topping.quantity).toFixed(2) ]]
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+
+                                            <!-- <strong>Product Total:</strong> $[[ item.size ? (item.number * (item.size.price +
+                                            item.toppingPrice)).toFixed(2) : (item.number * item.price).toFixed(2) ]]<br> -->
+                                            <div>
+                                                <button class="btn text-danger p-0"
+                                                    @click="removeFromCart(item)"><small>Delete</small></button>
+                                                <span>&nbsp;&nbsp;</span>
+
+                                                <button type="button" data-bs-toggle="modal"
+                                                    :data-bs-target="'#modal_' + item.id + '_' + item.size.value + (item.toppings && item.toppings.length ? '_withTopping' : '_withoutTopping')"
+                                                    v-if="item.toppings && item.toppings.length || item.size"
+                                                    class="btn text-primary p-0"><small>Edit</small></button>
+                                            </div>
+                                        </div>
+                                        <hr class="my-2" />
+
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="cart-original-total d-flex justify-content-between px-2">
+                                <span><strong>Total</strong></span>
+                                <span><strong>$[[ originalTotalPrice ]]</strong></span>
+                            </div>
+                        </div>
+                        <hr class="mt-2 mb-3" />
+                        <div class="cart-footer px-2" style="background-color: white;">
+                            {%if 'loggedin' in session%}
+                            <button class="btn btn-checkout col-11 p-2 d-flex justify-content-between"
+                                @click="checkout">
+                                <div v-if="voucherApplied">
+                                    <span>$[[ totalPrice ]]</span>
+                                </div>
+                                <div v-else>
+                                    <span>$[[ originalTotalPrice ]]</span>
+                                </div>
+                                Edit the order
+                            </button>
+                            {%else%}
+                            <div class="alert alert-danger text-center mx-2" role="alert">
+                                You need an account to checkout! <a href="/login">Login</a>
+                            </div>
+                            {%endif%}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal -->
+            <div>
+                <div v-for="product in cart">
+                    <span v-if="product.size">
+                        <div class="modal fade edit-modal"
+                            :id="'modal_' + product.id + '_' + product.size.value + (product.toppings && product.toppings.length ? '_withTopping' : '_withoutTopping')"
+                            tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header p-0">
+                                        <img :src="basePath + product.id + '.jpg'" alt="Pizza Image"
+                                            class="card-img-top">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"
+                                            style="z-index: 99; position: absolute; top: 10px; right: 10px;"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h1 class="mb-3">[[ product.name ]]</h1>
+                                        <figcaption class="blockquote-footer">
+                                            [[ product.description ]]
+                                        </figcaption>
+
+
+                                        <div class="card">
+                                            <p class="d-inline-flex gap-1">
+                                                <button class="btn col-12" type="button" data-bs-toggle="collapse"
+                                                    :data-bs-target="'#size-collapse_' + product.id + '_' + product.size.value + (product.toppings && product.toppings.length ? '_withTopping' : '_withoutTopping')"
+                                                    aria-expanded="false" aria-controls="collapseExample">
+                                                    <div class="d-flex justify-content-between">
+                                                        <h2 class="text-decoration-none">Size<h2>
+                                                                <h2 class="text-decoration-none">[[product.size.value]]
+                                                                </h2>
+                                                    </div>
+                                                </button>
+                                            </p>
+                                            <div class="collapse"
+                                                :id="'size-collapse_' + product.id + '_' + product.size.value + (product.toppings && product.toppings.length ? '_withTopping' : '_withoutTopping')">
+                                                <div class="d-flex justify-content-around d-inline-block mb-2">
+                                                    <div v-for="(size, index) in getProductSizes(product.id)"
+                                                        :key="index">
+                                                        <input type="radio" class="btn-check" name="options-base"
+                                                            :value="size"
+                                                            :id="'option_' + index + '_' + size.value + product.id + '_' + product.size.value + '_' + (product.toppings && product.toppings.length ? '_withTopping' : '_withoutTopping')"
+                                                            autocomplete="off" v-model="product.size">
+                                                        <label class="btn"
+                                                            :for="'option_' + index + '_' + size.value + product.id + '_' + product.size.value + '_' + (product.toppings && product.toppings.length ? '_withTopping' : '_withoutTopping')">[[size.value]]</label>
+
+                                                        <p v-if="size.value !== product.size.value" class="text-center">
+                                                            <small class="p-0">[[(size.price -
+                                                                product.size.price)>0?'+':'-']]$[[Math.abs(size.price -
+                                                                product.size.price).toFixed(2)]]</small></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card mt-2">
+                                            <p class="d-inline-flex gap-1">
+                                                <button class="btn col-12" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#crust-collapse" aria-expanded="false"
+                                                    aria-controls="collapseExample">
+                                                    <div class="d-flex justify-content-between">
+                                                        <h2 class="text-decoration-none">Crust</h2>
+                                                        <h2 class="text-decoration-none">...</h2>
+                                                    </div>
+                                                </button>
+                                            </p>
+                                            <div class="collapse" id="crust-collapse">
+                                                <div class="d-flex justify-content-around">
+                                                    <span>...</span>
+                                                    <span>...</span>
+                                                    <span>...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="card my-2">
+                                            <p class="d-inline-flex gap-1">
+                                                <button class="btn col-12" type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#toppings-collapse" aria-expanded="false"
+                                                    aria-controls="collapseExample">
+                                                    <div class="d-flex justify-content-between">
+                                                        <h2 class="text-decoration-none">Edit toppings</h2>
+                                                        <h2 class="text-decoration-none">...</h2>
+                                                    </div>
+                                                </button>
+                                            </p>
+                                            <div class="collapse" id="toppings-collapse">
+                                                <div class="d-flex justify-content-between align-items-center px-3 mb-3"
+                                                    v-for="topping in product.toppings">
+
+                                                    <div>
+                                                        <span>[[topping.name]]-$[[topping.price]]</span>
+                                                    </div>
+
+                                                    <div>
+
+                                                        <button @click="removeToppingFromCart(product,topping)"
+                                                            class="topping-btn">
+                                                            <i class="fas fa-minus remove-btn"></i>
+                                                        </button>
+                                                        <span>[[topping.quantity]]</span>
+                                                        <button @click="addToppingToCart(product,topping)"
+                                                            class="topping-btn">
+
+                                                            <i class="fas fa-plus add-btn"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
+                                            <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<script>
+    var cartFromSession;
+    {% if isCartString %}
+    cartFromSession = JSON.parse('{{ cartSession|safe }}');
+    {% endif %}
+
+    {% if voucherApplied %}
+    voucherApplied = {{ 'true' if voucherApplied == True else 'false' }};
+    {% endif %}
+
+    {% if orderID %}
+    const orderID = {{ orderID }};
+    {% endif %}
+
+    const app = Vue.createApp({
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                nationalPizzas: nationalPizzasData,
+                branchPizzas: branchPizzasData,
+                nationalSideOfferings: nationalSideOfferingsData,
+                branchSideOfferings: branchSideOfferingsData,
+                nationaDrinks: nationalDrinksData,
+                branchDrinks: branchDrinksData,
+                toppings: toppingsData,
+                opacity: 1,
+                cart: [],
+                voucherCode: '',
+                voucherApplied: false,
+                selectedBPizzaImage: '',
+                selectedNPizzaImage: '',
+                selectedBSOImage: '',
+                selectedNSOImage: '',
+                selectedNDImage: '',
+                basePath: "{{ url_for('static', filename='image/') }}",
+                validVoucherCodes: ['abc', 'bcd', 'cde'],
+                orderID: orderID
+            }
+        },
+        created() {
+            if (Array.isArray(cartFromSession) && cartFromSession.length > 0) {
+                this.cart = cartFromSession;
+            }
+
+            if (typeof voucherApplied !== 'undefined') {
+                this.voucherApplied = voucherApplied;
+            }
+            [...this.nationalPizzas, ...this.branchPizzas].forEach(product => {
+                product.selectedSize = product.sizes[product.sizes.length - 1];
+            });
+        },
+        computed: {
+            originalTotalPrice() {
+                return this.cart.reduce((acc, item) => {
+                    if (item.size) {
+                        return acc + item.size.price * item.number + item.toppingPrice * item.number;
+                    } else {
+                        return acc + item.price * item.number;
+                    }
+                }, 0).toFixed(2);
+            },
+            totalPrice() {
+                if (this.voucherApplied) {
+                    return (this.originalTotalPrice * 0.9).toFixed(2);
+                } else {
+                    return this.originalTotalPrice;
+                }
+            },
+        },
+        methods: {
+            addToCartWithToppings(product) {
+                let toppingPrice = product.selectedToppings.reduce((sum, topping) => sum + topping.price * topping.quantity, 0);
+
+                let itemInCart = this.cart.find(item =>
+                    item.id === product.id &&
+                    item.size.value === product.selectedSize.value &&
+                    item.toppings.every(topping =>
+                        product.selectedToppings.some(selectedTopping =>
+                            selectedTopping.name === topping.name && selectedTopping.quantity === topping.quantity
+                        )
+                    )
+                );
+
+                if (itemInCart) {
+                    itemInCart.number += 1;
+                } else {
+                    this.cart.push({
+                        id: product.id,
+                        name: product.name,
+                        size: product.selectedSize,
+                        toppings: product.selectedToppings,
+                        number: 1,
+                        toppingPrice: toppingPrice,
+                        description: product.description,
+                    });
+                }
+                product.selectedToppings = JSON.parse(JSON.stringify(this.toppings));
+                product.selectedSize = product.sizes[product.sizes.length - 1]
+            },
+            addTopping(product, topping) {
+                const maxTotalToppingQuantity = 13;
+                const totalQuantity = product.selectedToppings.reduce((total, item) => total + item.quantity, 0);
+                if (totalQuantity + 1 <= maxTotalToppingQuantity){
+                    const selectedTopping = product.selectedToppings.find(item => item.name === topping.name);
+                    if (selectedTopping) {
+                         if (selectedTopping.quantity < 3) {
+                            selectedTopping.quantity += 1;
+                         } else {
+                            console.log('The max number of each topping is 3');
+                         }
+                    } else {
+                        product.selectedToppings.push({
+                            name: topping.name,
+                            price: topping.price,
+                            quantity: 1
+                        });
+                    }
+                } else {
+                    alert('The max number of selected topping is 13');
+                }
+                
+            },
+
+            removeTopping(product, topping) {
+                const selectedTopping = product.selectedToppings.find(item => item.name === topping.name);
+
+                if (selectedTopping) {
+                    if (selectedTopping.quantity > 0) { selectedTopping.quantity -= 1; }
+                }
+            },
+            // addToCart(product) {
+            //     this.addToCartWithToppings(product);
+            //     axios.post('/checkout', { cart: this.cart, total: this.totalPrice, voucherApplied:this.voucherApplied })
+            // },
+            applyVoucher() {
+                if (this.validVoucherCodes.includes(this.voucherCode)) {
+                    this.voucherApplied = true;
+                    this.voucherCode = '';
+                } else {
+                    alert("Invalid voucher code!");
+                    this.voucherCode = '';
+                }
+            },
+            addToCartSideOffering(offering) {
+                let itemInCart = this.cart.find(item => item.id === offering.id);
+
+                if (itemInCart) {
+                    itemInCart.number += 1;
+                } else {
+                    this.cart.push({
+                        id: offering.id,
+                        name: offering.name,
+                        description: offering.description,
+                        price: offering.price,
+                        number: 1,
+                        toppingPrice: 0
+                    });
+                }
+            },
+            removeFromCart(itemToRemove) {
+                const index = this.cart.findIndex(item => item.id === itemToRemove.id && (item.size ? item.size.value === itemToRemove.size.value : true));
+                if (index !== -1) {
+                    this.cart.splice(index, 1);
+                }
+            },
+            getProductSizes(productId) {
+                const allProducts = [...this.nationalPizzas, ...this.branchPizzas];
+                const foundProduct = allProducts.find(p => p.id === productId);
+                return foundProduct ? foundProduct.sizes : [];
+            },
+            showImgModalBP(productID) {
+                this.selectedBPizzaImage = '/static/image/'+productID+'.jpg';
+                $('#imageModalBP').modal('show');
+            },
+            showImgModalNP(productID) {
+                this.selectedNPizzaImage = '/static/image/'+productID+'.jpg';
+                $('#imageModalNP').modal('show');
+            },
+            showImgModalBSO(offeringID) {
+                this.selectedBSOImage = '/static/image/'+offeringID+'.jpg';
+                $('#imageModalBSO').modal('show');
+            },
+            showImgModalNSO(offeringID) {
+                this.selectedNSOImage = '/static/image/'+offeringID+'.jpg';
+                $('#imageModalNSO').modal('show');
+            },
+            showImgModalND(drinkID) {
+                this.selectedNDImage = '/static/image/'+drinkID+'.jpg';
+                $('#imageModalND').modal('show');
+            },
+            addToppingToCart(product, topping) {
+                const maxTotalToppingQuantity = 13;
+                
+                const index = this.cart.findIndex(item => item.id === product.id);                
+                const toppingIndex = this.cart[index].toppings.findIndex(item => item.name === topping.name);                
+                const totalQuantity = product.toppings.reduce((total, item) => total + item.quantity, 0);
+                if (totalQuantity < maxTotalToppingQuantity) {
+                    if (this.cart[index].toppings[toppingIndex].quantity < 3){
+                        this.cart[index].toppings[toppingIndex].quantity += 1;
+                    } else {
+                        console.log('The max of each topping is 3');
+                    }
+                } else {
+                    alert('The max number of selected topping is 13')
+                }        
+                product.toppingPrice = product.toppings.reduce((sum, topping) => sum + topping.price * topping.quantity, 0);
+            },
+            removeToppingFromCart(product, topping) {
+                const index = this.cart.findIndex((item) => item.id === product.id);
+                const toppingIndex = this.cart[index].toppings.findIndex(item => item.name === topping.name);
+                if (this.cart[index].toppings[toppingIndex].quantity > 0) {
+                    this.cart[index].toppings[toppingIndex].quantity -= 1;
+                }
+                product.toppingPrice = product.toppings.reduce((sum, topping) => sum + topping.price * topping.quantity, 0);
+            },
+            checkout() {
+                if (this.cart.length === 0) {
+                    alert("Nothing in the cart!");
+                } else {
+                    axios.post('/staff/editingOrder', { cart: this.cart, orderID: this.orderID})
+                        .then((response) => {
+                            if (response['result'] === false) {
+                                var msg = 'Edit Failed:\n\n';
+                                for (var i = 0; i < response['msg'].length; i++) {
+                                    msg += response['msg'][i];
+                                }
+                                alert(msg);
+                            } else {
+                                alert('The order has been edited!');
+                                window.location.href = '/';
+                            }
+
+
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                        });
+                }
+            }
+
+        },
+        mounted() {
+            this.timer = setInterval(() => {
+                this.opacity -= 0.01;
+                if (this.opacity <= 0) this.opacity = 1;
+            }, 16);
+        },
+    });
+
+    app.mount('#app');
+</script>
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}

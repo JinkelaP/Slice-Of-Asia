@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Branch Admin Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    .staff-card-btns {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .staff-card-btn {
+        width: 48%;
+    }
+</style>
+
+
+<div class="container mt-3">
+    <h2>Branch Staffs</h2>
+    <button class="btn btn-success mb-2" data-bs-toggle="modal" data-bs-target="#addStaffModal">Add Staff</button>
+    <div class="row">
+        {% for staff in staffs %}
+        <div class="col-md-4 col-sm-6 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <!-- Displaying staff image -->
+                    <img src="{{ url_for('static', filename='image/' + staff['userID']|string + '.jpg') }}"
+                         alt="Staff Image"
+                         style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; margin: 0 auto 20px auto;"
+                         class="rounded-circle mb-3">
+                    
+                    <!-- Staff details -->
+                    <h5 class="card-title">{{ staff.title }} {{ staff.firstName }} {{ staff.lastName }}</h5>
+                    <p class="card-text">Position : {{ staff.position }}</p>
+                    <p class="card-text">TEL : {{ staff.phoneNumber }}</p>
+                    
+                    <!-- Edit and Delete buttons -->
+                    <div class="staff-card-btns">
+                        <!-- Linking the Edit button to its corresponding modal -->
+                        <a href="#editModal{{ staff.staffID }}" data-bs-toggle="modal" class="btn btn-primary staff-card-btn">Edit</a>
+                        <a href="#" class="btn btn-danger staff-card-btn" data-bs-toggle="modal" data-bs-target="#deleteStaffModal-{{ staff.staffID }}">Delete</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Staff Modal -->
+            <div class="modal fade" id="addStaffModal" tabindex="-1" aria-labelledby="addStaffModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addStaffModalLabel">Add Staff</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="{{ url_for('adminDashboard2.add_staff') }}" method="post">
+                            <div class="modal-body">
+                                <!-- Step 1: Registration -->
+                                <h6><strong>Step 1: Register Staff</strong></h6>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="userPassword" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="userPassword" name="userPassword"
+                                        required>
+                                </div>
+
+                                <!-- Step 2: Staff Info -->
+                                <h6 class="pt-4"><strong>Step 2: Add Information</strong></h6>
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Position</label>
+                                    <input type="text" class="form-control" id="position" name="position" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Add Staff</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editModal{{ staff.staffID }}" tabindex="-1" aria-labelledby="editModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel">Edit Staff</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{{ url_for('adminDashboard2.edit_staff', staff_id=staff.staffID) }}"
+                                method="post">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="title" name="title"
+                                        value="{{ staff.title }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName"
+                                        value="{{ staff.firstName }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName"
+                                        value="{{ staff.lastName }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Position</label>
+                                    <input type="text" class="form-control" id="position" name="position"
+                                        value="{{ staff.position }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber"
+                                        value="{{ staff.phoneNumber }}" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Staff Modal -->
+            <div class="modal fade" id="deleteStaffModal-{{ staff.staffID }}" tabindex="-1"
+                aria-labelledby="deleteStaffModalLabel-{{ staff.staffID }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteStaffModalLabel-{{ staff.staffID }}">Delete Confirmation
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete {{ staff.firstName }} {{ staff.lastName }}?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <a href="{{ url_for('adminDashboard2.delete_staff', staffID=staff.staffID) }}"
+                                class="btn btn-danger">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

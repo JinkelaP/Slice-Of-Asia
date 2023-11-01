@@ -1,0 +1,346 @@
+<!-- This is the base of the website. All other pages inherit from the page.-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %}</title>
+  <!-- CSS only -->
+  <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+    integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+    crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
+
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='echarts.js') }}" charset="utf-8"></script> -->
+
+
+</head>
+
+<body>
+  <!-- Nav bar.-->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top py-3" style="background-color: #ce5944;">
+    <div class=" container d-flex align-items-center">
+      <a href="/" class="d-flex align-items-center me-3">
+        <img src="{{ url_for('static', filename='image/logo.png') }}" alt="Logo" height="38px" class="d-lg-block">
+        <img src="{{ url_for('static', filename='image/brand.png') }}" alt="brand" height="30px"
+          class="d-lg-block d-none ms-3">
+      </a>
+      <a class="navbar-brand mb-0 h1 text-white" href="/"><strong></strong></a>
+      {% if session['loggedin'] == True %}
+      <button class="btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarNavigation"
+        aria-controls="sidebarNavigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="offcanvas-lg offcanvas-end offcanvas text-bg-dark" tabindex="-1" id="sidebarNavigation"
+        aria-labelledby="sidebarNavigationLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="sidebarNavigationLabel">Slice of Asia</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+            data-bs-target="#sidebarNavigation" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+          <!-- navigation links-->
+          {% if session['role'] == 'HQ_Admin' %}
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link text-white me-2" aria-current="page" href="/">Branches</a>
+            </li>
+            <!-- <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                Menus
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/">Pizzas</a></li>
+                <li><a class="dropdown-item" href="/">SideOfferings</a></li>
+                <li><a class="dropdown-item" href="/">Toppings</a></li>
+                <li><a class="dropdown-item" href="/">Drinks</a></li>
+              </ul>
+            </li> -->
+            <li class="nav-item">
+              <a class="nav-link text-white" aria-current="page" href="/nationalPromotions">Promotion</a>
+            </li>  
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" aria-current="page" href="/hqAdmin/reports">Reports</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" aria-current="page" href="/">News</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" aria-current="page" href="{{url_for('adminDashboard1.nationalProducts')}}">National Products</a>
+            </li>
+            <hr />
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-white" href="{{url_for('adminDashboard1.hqadminProfile')}}">Profile</a>
+            </li>
+
+            <hr />
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-white" href="{{url_for('logout.logout')}}">Log out</a>
+            </li>
+          </ul>
+          {% elif session['role'] == 'branch_Admin' %}
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+            <li class="nav-item">
+              <a class="nav-link text-white" href="{{url_for('adminDashboard2.branchStaffs')}}">Staffs</a>
+            </li>
+            <li>
+              <a class="nav-link text-white" href="/">Orders</a>
+            </li>
+            <li>
+              <a class="nav-link text-white" href="{{url_for('adminDashboard2.branchProducts')}}">Products</a>
+            </li>
+            <!-- <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Menus
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/">Pizzas</a></li>
+                <li><a class="dropdown-item" href="/">SideOfferings</a></li>
+                <li><a class="dropdown-item" href="/">Drinks</a></li>
+              </ul>
+            </li> -->
+            <li class="nav-item">
+              <a class="nav-link text-white" aria-current="page" href="/adminDashboard2/reports">Reports</a>
+            </li>
+            <li>
+              <a class="nav-link text-white" href="{{url_for('adminDashboard2.branchPromotions')}}">Promotions</a>
+            </li>
+            <li>
+              <a class="nav-link text-white" href="{{url_for('adminDashboard2.checkReviews', branchID = session['branchID'])}}">Reviews</a>
+            </li>
+            <hr />
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-white" href="{{url_for('adminDashboard2.branchadminProfile')}}">Profile</a>
+            </li>
+
+            <hr />
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-white" href="{{url_for('logout.logout')}}">Log out</a>
+            </li>
+          </ul>
+
+          {% elif session['role'] == 'branch_Staff' %}
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">          
+            
+            <li>
+              <a class="nav-link text-white" href="/">Orders</a>
+            </li>           
+            <!-- <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                Menus
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/">Pizzas</a></li>
+                <li><a class="dropdown-item" href="/">SideOfferings</a></li>
+                <li><a class="dropdown-item" href="/">Drinks</a></li>
+              </ul>
+            </li> -->
+            <hr />
+            <li class="nav-item d-md-none">
+              <a class="nav-link text-white" href="{{url_for('staffDashboard.staffProfile')}}">Profile</a>
+            </li>
+          
+            <hr />
+            <li class="nav-item d-md-none">
+              <a class="nav-link text-white" href="{{url_for('logout.logout')}}">Log out</a>
+            </li>
+          </ul>
+
+          {% elif session['role'] == 'Customer' %}
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link text-white" aria-current="page" href="/">Menu</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white" href="/customer/myOrder">My orders</a>
+            </li>
+            <hr />
+            <li class="nav-item d-lg-none">
+
+              <a class="nav-link text-white" href="{{url_for('customerDashboard.customerProfile')}}">Profile</a>
+
+            </li>
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-white" href="#">News/Updates</a>
+            </li>
+            <!-- <li class="nav-item d-lg-none">
+                  <a class="nav-link text-white" href="#">Settings</a>
+                </li> -->
+            <hr />
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-white" href="{{url_for('logout.logout')}}">Log out</a>
+            </li>
+          </ul>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex-grow-1 d-none d-lg-block"></div>
+
+      {% if session['role'] == 'Customer' %}
+      <!-- news/updates button -->
+      <div class="d-none d-lg-block px-3">
+        <a class="btn p-0 position-relative text-white" href="/customer/msg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-envelope"
+            viewBox="0 0 16 16">
+            <path
+              d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z" />
+          </svg>
+          <span
+            class="position-absolute start-75 translate-middle bg-danger border-none rounded-circle mail-alert-red-dot d-none"
+            style="padding:5px; top:5px; left: 20px;">
+            <span class="visually-hidden">New alerts</span>
+          </span>
+        </a>
+      </div>
+      {% endif%}
+
+
+      <!-- profile button -->
+      <div class="dropdown text-end d-flex align-items-center d-none d-lg-block ps-3">
+        <!-- <p class="username-text text-white my-2 mx-2">{{session['username']}}</p> -->
+        <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
+          aria-expanded="false">
+            <img src="{{ url_for('static', filename='avatar/' + session['id']|string + '.jpg') }}" alt="mdo"
+              style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%;" class="rounded-circle"
+              onerror="this.onerror=null; this.src='{{ url_for('static', filename='avatar/defaultAvatar.svg')}}';">
+        </a>
+        <ul class="dropdown-menu text-small base-page-drop-down" data-popper-placement="bottom-start"
+          style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 34px);">
+
+          <li>
+            {% if session['role'] == 'HQ_Admin' %}
+            <a class="dropdown-item" href="{{url_for('adminDashboard1.hqadminProfile')}}">Profile</a>
+            {% elif session['role'] == 'branch_Admin' %}
+            <a class="dropdown-item" href="{{url_for('adminDashboard2.branchadminProfile')}}">Profile</a>
+            {% elif session['role'] == 'branch_Staff' %}
+            <a class="dropdown-item" href="{{url_for('staffDashboard.staffProfile')}}">Profile</a>
+            {% elif session['role'] == 'Customer' %}
+            <a class="dropdown-item" href="{{url_for('customerDashboard.customerProfile')}}">Profile</a>
+            {% endif %}
+          </li>
+
+          {% if session['role'] == 'Customer' %}
+          <li><a class="dropdown-item" href="/customer/myOrder">Orders</a></li>
+          {% endif %}
+          <li>
+            <hr class="dropdown-divider">
+          </li>
+          <li><a class="dropdown-item" href="{{url_for('logout.logout')}}">Log out</a></li>
+        </ul>
+      </div>
+      {% else %}
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbars-simpler"
+        aria-controls="navbars-NZOly" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon text-white"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbars-simpler">
+        <div class="flex-grow-1"></div>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link text-white" aria-current="page" href="{{url_for('login.login')}}">Log in</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="/register">Register</a>
+          </li>
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- The content of pages.-->
+  <header>
+    {% block header %}{% endblock %}
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <!-- footer -->
+  <br />
+  <div class="">
+    <footer class="py-1 pt-5 mt-2" style="background-color: #ce5944;">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 col-md-2 mb-3">
+            <h5 class="text-white"><strong>Foods</strong></h5>
+            <ul class="nav flex-column">
+              <li class="nav-item mb-2"><a href="/menu" class="nav-link p-0 text-white">Pizza</a></li>
+              <li class="nav-item mb-2"><a href="/menu" class="nav-link p-0 text-white">Dumplings</a></li>
+              <li class="nav-item mb-2"><a href="/menu" class="nav-link p-0 text-white">Noodle Soup</a></li>
+              <li class="nav-item mb-2"><a href="/menu" class="nav-link p-0 text-white">Sides</a></li>
+              <li class="nav-item mb-2"><a href="/menu" class="nav-link p-0 text-white">Drinking</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-5 offset-md-1 mb-3 ms-auto">
+            <h5 class="display-5 text-white">BEST PIZZAS,</h5>
+            <h5 class="display-5 text-white">BEST SIDES,</h5>
+            <h1 class="display-3 text-white">BEST CHOICE!</h1>
+          </div>
+        </div>
+
+        <div class="d-flex flex-column flex-sm-row justify-content-between py-4 my-2 border-top">
+          <p class="text-white">&copy; 2023S2 COMP639 Group 1 Project 2 @Lincoln University <a href="#"
+              class="text-white">Back to top</a></p>
+
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='index.js') }}" charset="utf-8"></script>
+  <script>
+    // alert for successful msg
+    var successMessage = "{{ get_flashed_messages(category_filter=['success'])[0] }}";
+
+    var regexPattern = /^\/customer\/trackOrder\/.*/;
+
+    // var noShowSuccessAlert = window.location.pathname === '/customer/trackOrder';
+    if (successMessage && !regexPattern.test(window.location.pathname)) {
+      alert(successMessage);
+    }
+  </script>
+  <script>
+    (() => {
+      'use strict'
+
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      const forms = document.querySelectorAll('.needs-validation')
+
+      // Loop over them and prevent submission
+      Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+          if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+
+          form.classList.add('was-validated')
+        }, false)
+      })
+    })()
+  </script>
+</body>
+
+</html>

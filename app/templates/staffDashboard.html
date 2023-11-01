@@ -1,0 +1,346 @@
+{% extends 'base.html' %} {% block title %}staffDashboard{% endblock %} {% block
+content %}
+
+<div class="container mt-4 col-lg-12" id="staffOrdersApp">
+  <div class="search-container">
+    <form class="d-flex mt-3 mt-lg-0" role="search">
+      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" v-model="searchQuery">
+      <input class="form-control me-2" type="date" v-model="startDate">
+      <input class="form-control me-2" type="date" v-model="endDate">
+      <button class="btn btn-outline-success" type="button" @click="searchOrders">Search</button>
+    </form>
+  </div>
+  <div class="search-results mt-3" v-show="searchResults.length > 0">
+    <h2 class="display-5 lead text-center">Search Results</h2>
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Status</th>
+          <th>Name</th>
+          <th>Details</th>
+          <th>Delivery</th>
+          <th>Order Time</th>
+          <th>Est Time</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="order in searchResults" :key="order.value.orderID">
+          <td>[[ order.value.orderID ]]</td>
+          <td>[[ order.value.orderStatus ]]</td>
+          <td>[[ order.value.title ]] [[ order.value.firstName ]] [[ order.value.lastName ]]</td>
+          <td>
+            <div v-for="item in parseOrderJSON(order.value.orderJSON)" :key="item.id" class="my-1">
+              <p class="m-0">
+                <span style="font-weight: bold;">[[item.id]]</span> [[ item.name || 'None' ]] x <span
+                  style="font-weight: bold;">[[ item.number || 'None' ]]</span>
+              </p>
+              <ul class="mb-0 pl-3">
+                <span class="m-0" v-if="item.size && item.size.label">
+                  <li>[[ item.size.label ]]</li>
+                </span>
+                <span class="m-0" v-if="item.toppings">
+                  <span v-for="i in item.toppings" class="m-0">
+                    <span v-if="i.quantity > 0">
+                      <li>[[ i.name ]] x [[ i.quantity ]]</li>
+                    </span>
+                  </span>
+                </span>
+              </ul>
+            </div>
+          </td>
+          <td>[[order.value.deliveryOption]]</td>
+          <td>
+            [[ new Date(order.value.orderDate).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day:
+            '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Pacific/Auckland' })]]
+          </td>
+          <td>
+            [[ new Date(order.value.estimatedTime).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day:
+            '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Pacific/Auckland' }) ]]
+          </td>
+          <td v-show="order.specialRequests">[[order.value.specialRequests]]</td>
+          <td>
+            <button type="button" class="btn btn-outline-dark px-4 my-2" @click="changeStatus(order)"> Change Status
+            </button>
+          </td>
+          <td>
+            <button type="button" class="btn btn-outline-dark px-4 my-2" @click="confirmDelete(order)"> Delete Order
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <hr>
+  </div>
+
+  <h1 class="display-5 lead text-center mt-3">Order List</h1>
+  <div class="">
+    <div class="btn-group col-md-10 mt-3 px-2" role="group">
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off"
+        @click="handleRadioClick('Paid') " checked />
+      <label class="btn btn-outline-warning" for="btnradio1">Paid</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"
+        @click="handleRadioClick('Processing') " />
+      <label class="btn btn-outline-warning" for="btnradio2">Processing</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"
+        @click="handleRadioClick('In Oven') " />
+      <label class="btn btn-outline-warning" for="btnradio3">In Oven</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off"
+        @click="handleRadioClick('Quality Checking') " />
+      <label class="btn btn-outline-warning" for="btnradio4">Quality Checking</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio5" autocomplete="off"
+        @click="handleRadioClick('Ready In Store') " />
+      <label class="btn btn-outline-warning" for="btnradio5">Ready In Store</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio6" autocomplete="off"
+        @click="handleRadioClick('On The Way') " />
+      <label class="btn btn-outline-warning" for="btnradio6">On The Way</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio7" autocomplete="off"
+        @click="handleRadioClick('Delivered')" />
+      <label class="btn btn-outline-warning" for="btnradio7">Delivered/Picked up</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio8" autocomplete="off"
+        @click="handleRadioClick('Done') " />
+      <label class="btn btn-outline-warning" for="btnradio8">Done</label>
+
+      <input type="radio" class="btn-check" name="btnradio" id="btnradio9" autocomplete="off"
+        @click="selectedFilter = 'All'" />
+      <label class="btn btn-outline-warning" for="btnradio9">All</label>
+    </div>
+  </div>
+
+  <div class="my-5 row d-flex">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Status</th>
+          <th>Name</th>
+          <th>Details</th>
+          <th>Delivery</th>
+          <th>Order Time</th>
+          <th>Est Time</th>
+          <th>Special Requests</th>
+          <th>Operation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="order in filteredOrders.slice().reverse()" :key="order.value.orderID">
+          <td>[[ order.value.orderID ]]</td>
+          <td>[[ order.value.orderStatus ]]</td>
+          <td>[[ order.value.title ]] [[ order.value.firstName ]] [[ order.value.lastName ]]</td>
+          <td>
+            <div v-for="item in parseOrderJSON(order.value.orderJSON)" :key="item.id" class="my-1">
+              <p class="m-0">
+                <span style="font-weight: bold;">[[item.id]]</span> [[ item.name || 'None' ]] x <span
+                  style="font-weight: bold;">[[ item.number || 'None' ]]</span>
+              </p>
+              <ul class="mb-0 pl-3">
+                <span class="m-0" v-if="item.size && item.size.label">
+                  <li>[[ item.size.label ]]</li>
+                </span>
+                <span class="m-0" v-if="item.toppings">
+                  <span v-for="i in item.toppings" class="m-0">
+                    <span v-if="i.quantity > 0">
+                      <li>[[ i.name ]] x [[ i.quantity ]]</li>
+                    </span>
+                  </span>
+                </span>
+              </ul>
+            </div>
+          </td>
+          <td>[[order.value.deliveryOption]]</td>
+          <td>
+            [[ new Date(order.value.orderDate).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day:
+            '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Pacific/Auckland' })]]
+          </td>
+          <td>
+            [[ new Date(order.value.estimatedTime).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day:
+            '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Pacific/Auckland' }) ]]
+            <span v-if="new Date(order.value.estimatedTime) < new Date() && order.value.orderStatus != 'Done'" style="color: red;"><br>Due</span>
+            <span v-if="new Date(order.value.estimatedTime) > new Date() && order.value.orderStatus != 'Done'" style="color:green;"><br>Need to be prepared</span>
+          </td>
+          <td v-if="order.value.specialRequests">[[order.value.specialRequests]]</td>
+          <td v-else>N/A</td>
+          <td>
+            <button type="button" class="btn btn-outline-dark mx-1 px-2 mb-2" @click="changeStatus(order)" v-if="order.value.orderStatus != 'Done'"> Change Status
+            </button>
+            <!-- <button type="button" class="btn btn-outline-dark mx-1 px-2 mb-2" @click="editOrder(order.value.orderID)" v-if="order.value.orderStatus != 'Done'"> Edit
+            </button> -->
+            <button type="button" class="btn btn-danger mx-1 px-2 mb-2" @click="confirmDelete(order)" v-if="order.value.orderStatus != 'Done'"> Delete Order </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+  <div id="myData" style="display: none">{{ allOrders | tojson | safe }}</div>
+  <!-- Source Data -->
+</div>
+
+<script type="module">
+  import {
+    createApp,
+    ref,
+    watch,
+  } from "https://cdn.jsdelivr.net/npm/vue@3.0.0/dist/vue.esm-browser.js";
+
+  const app = createApp({
+    delimiters: ["[[", "]]"],
+    data() {
+      return {
+        allOrders: [],
+        selectedFilter: "Paid",
+        searchQuery: "",
+        startDate: "",
+        endDate: "",
+        searchResults: [],
+      };
+    },
+    mounted() {
+      const myDataElement = document.getElementById("myData");
+
+      if (myDataElement) {
+        const allOrdersData = JSON.parse(myDataElement.textContent);
+        if (Array.isArray(allOrdersData)) {
+          this.allOrders = allOrdersData.map((order) => ref(order));
+        } else {
+          console.error("allOrders is not Array");
+        }
+      } else {
+        console.error("Cannot find #mydata");
+      }
+    },
+    computed: {
+      filteredOrders() {
+        if (this.selectedFilter === "All") {
+          return this.allOrders;
+        }
+        return this.allOrders.filter(
+          (order) => order.value.orderStatus === this.selectedFilter
+        );
+      },
+    },
+
+    methods: {
+      handleRadioClick(value) {
+        this.selectedFilter = value;
+      },
+
+      parseOrderJSON(orderJSON) {
+        try {
+          const parsedJSON = JSON.parse(orderJSON);
+          return Array.isArray(parsedJSON) ? parsedJSON : [parsedJSON];
+        } catch (error) {
+          console.error("Error parsing orderJSON:", error);
+          return [];
+        }
+      },
+      // 'Unpaid', 'Paid', 'Processing', 'In Oven', 'Quality Checking', 'Ready In Store', 'On The Way', 'Delivered','Done'
+      changeStatus(order) {
+        const currentStatus = order.value.orderStatus;
+        let nextStatus;
+        if (currentStatus === "Paid") {
+          nextStatus = "Processing";
+        } else if (currentStatus === "Processing" && this.parseOrderJSON(order.value.orderJSON).some(item => item.id < 200)) {
+          nextStatus = "In Oven";
+        } else if (currentStatus === "Processing" && !this.parseOrderJSON(order.value.orderJSON).some(item => item.id < 200)) {
+          nextStatus = "Quality Checkingg";
+        } else if (currentStatus === "In Oven") {
+          nextStatus = "Quality Checking";
+        } else if (currentStatus === "Quality Checking") {
+          nextStatus = "Ready In Store";
+        } else if (currentStatus === "Ready In Store" && order.value.deliveryOption === 'Pick Up') {
+          nextStatus = "Delivered";
+        } else if (currentStatus === "Ready In Store" && order.value.deliveryOption === 'Delivery') {
+          nextStatus = "On The Way";
+        } else if (currentStatus === "On The Way") {
+          nextStatus = "Delivered";
+        } else if (currentStatus === "Delivered") {
+          nextStatus = "Done";
+        }
+
+        if (nextStatus) {
+          order.value.orderStatus = nextStatus;
+          axios.post("/staff/changeStatus", {
+            orderID: order.value.orderID,
+            newStatus: nextStatus,
+          });
+        }
+      },
+      editOrder(orderID) {
+        window.location.href = `/staff/editOrder/${orderID}`;
+      },
+
+      confirmDelete(order) {
+        const confirmed = window.confirm("Are you sure to delete this order?");
+
+        if (confirmed) {
+          this.deleteOrder(order);
+        }
+      },
+
+      deleteOrder(order) {
+        const index = this.allOrders.indexOf(order);
+        if (index > -1) {
+          this.allOrders.splice(index, 1);
+        }
+
+        axios
+          .delete("/staff/deleteOrder", {
+            data: { orderID: order.value.orderID },
+          })
+          .then((response) => {
+            console.log("delete success");
+          })
+          .catch((error) => {
+            console.error("delete error", error);
+          });
+      },
+
+      searchOrders() {
+        this.searchResults = this.allOrders.filter((order) => {
+          if (this.searchQuery) {
+            const isMatchedBySearch =
+              order.value.orderID.toString().includes(this.searchQuery) ||
+              order.value.firstName.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+              order.value.lastName.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+              order.value.customerID.toString().includes(this.searchQuery);
+            if (!isMatchedBySearch) {
+              return false;
+            }
+          }
+
+          if (this.startDate && this.endDate) {
+            const orderDate = new Date(order.value.orderDate);
+            const startDate = new Date(this.startDate);
+            const endDate = new Date(this.endDate);
+
+            const isWithinDateRange =
+              orderDate >= startDate && orderDate <= endDate;
+
+            return isWithinDateRange;
+          }
+
+          return true;
+        });
+      },
+    },
+
+    watch: {
+      selectedFilter(newValue) {
+        // this.filteredOrders = this.allOrders.filter(
+        // (order) => order.value.orderStatus === newValue);
+      },
+    },
+  });
+  app.mount("#staffOrdersApp");
+</script>
+{% endblock %}

@@ -1,0 +1,640 @@
+{% extends 'base.html' %}
+{% block title %}Menu{% endblock %}
+{% block content %}
+<script>
+    const branchPizzasData = {{ branch_pizzas | tojson | safe }};
+    const branchSideOfferingsData = {{ branch_sideOfferings | tojson | safe }};
+    const branchDrinksData = {{ branch_drinks | tojson | safe }};
+</script>
+<style>
+    .product-card-btns {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .product-card-btn {
+        width: 45%;
+    }
+
+    .flex-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+</style>
+
+<div class="container mt-3">
+    <div id="app">
+        <h1>Manage Branch Products</h1>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs mt-3 mb-3" id="productTabs" role="tablist" style="font-size: 18px; font-weight: bold;">
+            <li class="nav-item" v-for="tab in tabs" :key="tab">
+                <a class="nav-link" :class="{ active: activeTab === tab }" @click="changeTab(tab)">[[ tab ]]</a>
+            </li>
+        </ul>
+
+        <!--Tab content -->
+        <div class="tab-content" id="productTabContent">
+            <!-- Pizzas -->
+            <div v-if="activeTab === 'Pizzas'" class="tab-pane fade show active">
+                <div class="col-md-12 text-md-end">
+                    <button class="btn btn-success mt-3 mb-4" data-toggle="modal" data-target="#addPizzaModal">Add
+                        Pizza</button>
+                </div>
+                <div class="row">
+                    <div v-for="group in pizzas" :key="group[0].pizzaID" class="col-md-3 col-sm-4 mb-4">
+                        <div class="card" style="width: 19rem;">
+                                <img :src="'/static/image/' + group[0].pizzaID + '.jpg'" class="card-img-top" 
+                                alt="Pizza Image" @click="showImgModal(group)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+
+                            <div class="card-body">
+                                <h5 class="card-title">[[ group[0].pizzaName ]]</h5>
+                                <p class="card-text">[[ group[0].description ]]</p>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li v-for="pizza in group" :key="pizza.pizzaID" class="list-group-item">
+                                    <div class="flex-container">
+                                        <span>PizzaID: [[ pizza.pizzaID ]], [[ pizza.size ]], $[[ pizza.price ]]</span>
+                                        <button v-if="pizza.pizzaActive" @click="deleteSingleSizePizza(pizza.pizzaID)"
+                                            class="btn btn-sm btn-danger" data-toggle="tooltip" data-placement="top" title="Delete this size">Del</button>
+                                        <button v-else @click="resumeSingleSizePizza(pizza.pizzaID)"
+                                            class="btn btn-sm btn-success" data-toggle="tooltip" data-placement="top" title="Resume this size">Resume</button>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="card-footer product-card-btns">
+                                <button @click="openEditPizzaModal(group)" class="btn btn-primary product-card-btn">Edit</button>
+                                <button @click="deleteEntirePizza(group[0].pizzaName)" class="btn btn-danger product-card-btn" data-toggle="tooltip" data-placement="top" title="Delete the whole pizza">Delete</button>
+                            </div>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Offerings Tab -->
+            <div v-if="activeTab === 'Side Offerings'" class="tab-pane fade show active">
+                <div class="col-md-12 text-md-end">
+                    <button class="btn btn-success mt-3 mb-4" data-toggle="modal"
+                        data-target="#addSideOfferingModal">Add SideOffering</button>
+                </div>
+                <div class="row">
+                    <div v-for="offering in sideOfferings" class="col-md-3 col-sm-4 mb-4"
+                        :key="offering.sideOfferingID">
+                        <div class="card" style="width: 19rem;">
+                            <img :src="'/static/image/' + offering.sideOfferingID + '.jpg'" class="card-img-top"
+                                alt="Side Offering Image" @click="showImgModalSO(offering)" data-toggle="tooltip" data-placement="top" title="Click to see a larger image">
+                            <div class="card-body">
+                                <h5 class="card-title">[[ offering.offeringName ]]</h5>
+                                <p class="card-text">[[ offering.description ]]</p>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">Price: $[[ offering.price ]]</li>
+                                <li class="list-group-item">Preparation Time: [[ offering.preparetime ]] mins</li>
+                            </ul>
+                            <div class="card-footer product-card-btns">
+                                <button class="btn btn-primary product-card-btn"
+                                    @click="openEditModal(offering)">Edit</button>
+                                <button class="btn btn-danger product-card-btn" data-bs-toggle="modal"
+                                    data-bs-target="#deleteSideOfferingModal"
+                                    @click="setOfferingToDelete(offering)">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drinks Tab -->
+            <!-- <div v-if="activeTab === 'Drinks'" class="tab-pane fade show active">
+                <div class="col-md-12 text-md-end">
+                    <button class="btn btn-success mt-3 mb-4">Add Drink</button>
+                </div>
+                <div class="row">
+                    <div v-for="drink in drinks" class="col-md-3 col-sm-4 mb-4">
+                        <div class="card" style="width: 19rem;">
+                            <img :src="'/static/image/' + drink.drinkID + '.jpg'" class="card-img-top"
+                                alt="Drink Image">
+                            <div class="card-body">
+                                <h5 class="card-title">[[ drink.drinkName ]]</h5>
+                                <p class="card-text">[[ drink.description ]]</p>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">Price: $[[ drink.price ]]</li>
+                                <li class="list-group-item">Preparation Time: [[ drink.preparetime ]] mins</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+
+        <!-- SideOffering Image Modal -->
+        <div class="modal fade" id="imageModalSO" tabindex="-1" aria-labelledby="imageModalSOLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalSOLabel">Pizza Image</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img :src="selectedSOImage" alt="Pizza Image" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pizza Image Modal -->
+        <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalLabel">Pizza Image</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img :src="selectedPizzaImage" alt="Pizza Image" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Pizza Modal -->
+        <div class="modal fade" id="addPizzaModal" tabindex="-1" role="dialog" aria-labelledby="addPizzaModalLabel"
+            aria-hidden="true" ref="addPizzaModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addPizzaModalLabel">Add Pizza</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="pizzaImage" class="form-label">Pizza Image</label>
+                            <input type="file" class="form-control" id="pizzaImage" name="pizzaImage" accept=".jpg"
+                                required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pizzaName" class="form-label">Pizza Name</label>
+                            <input type="text" class="form-control" id="pizzaName" v-model="newPizza.pizzaName"
+                                required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="pizzaDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="pizzaDescription" v-model="newPizza.pizzaDescription"
+                                rows="3" required></textarea>
+                        </div>
+
+                        <h6>Small Pizza</h6>
+                        <div class="mb-3">
+                            <label for="smallPrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="smallPrice"
+                                v-model="newPizza.smallPrice" required>
+                            <label for="smallPrepareTime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="smallPrepareTime"
+                                v-model="newPizza.smallPrepareTime" required>
+                        </div>
+
+                        <h6>Medium Pizza</h6>
+                        <div class="mb-3">
+                            <label for="mediumPrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="mediumPrice"
+                                v-model="newPizza.mediumPrice" required>
+                            <label for="mediumPrepareTime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="mediumPrepareTime"
+                                v-model="newPizza.mediumPrepareTime" required>
+                        </div>
+
+                        <h6>Large Pizza</h6>
+                        <div class="mb-3">
+                            <label for="largePrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="largePrice"
+                                v-model="newPizza.largePrice" required>
+                            <label for="largePrepareTime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="largePrepareTime"
+                                v-model="newPizza.largePrepareTime" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" @click="addPizza">Add Pizza</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Pizza Modal -->
+        <div class="modal fade" id="editPizzaModal" tabindex="-1" role="dialog" aria-labelledby="editPizzaModalLabel"
+        aria-hidden="true" ref="editPizzaModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editPizzaModalLabel">Edit Pizza</h5>
+                        <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editPizzaImage" class="form-label">Pizza Image</label>
+                            <input type="file" class="form-control" id="editPizzaImage" name="editPizzaImage" accept=".jpg">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editPizzaName" class="form-label">Pizza Name</label>
+                            <input type="text" class="form-control" id="editPizzaName" v-model="selectedPizza.pizzaName">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editPizzaDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editPizzaDescription" rows="3" v-model="selectedPizza.pizzaDescription"></textarea>
+                        </div>
+
+                        <!-- Dynamic sizes based on what's available -->
+                        <div v-for="size in selectedPizza.sizes" v-show="size.price || size.prepareTime" class="mb-3">
+                            <h6>[[ size.size ]] Pizza</h6>
+                            <label :for="'edit' + size.size + 'Price'" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" :id="'edit' + size.size + 'Price'" v-model="size.price">
+
+                            <label :for="'edit' + size.size + 'PrepareTime'" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" step="1" class="form-control" :id="'edit' + size.size + 'PrepareTime'" v-model="size.prepareTime">
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" @click="updatePizza">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for adding a new side offering -->
+        <div class="modal fade" id="addSideOfferingModal" tabindex="-1" role="dialog"
+            aria-labelledby="addSideOfferingModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addSideOfferingModalLabel">Add Side Offering</h5>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Product Image</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="offeringName" class="form-label">Offering Name</label>
+                            <input type="text" class="form-control" id="offeringName"
+                                v-model="newSideOffering.offeringName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" v-model="newSideOffering.description"
+                                required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="price"
+                                v-model="newSideOffering.price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="preparetime" class="form-label">Prepare Time (in minutes)</label>
+                            <input type="number" class="form-control" id="preparetime"
+                                v-model="newSideOffering.preparetime" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" @click="addSideOffering">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for editing a side offering -->
+        <div class="modal fade" id="editSideOfferingModal" tabindex="-1" role="dialog"
+            aria-labelledby="editSideOfferingModalLabel" aria-hidden="true" ref="editModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editSideOfferingModalLabel">Edit Side Offering</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editImage" class="form-label">Product Image</label>
+                            <input type="file" class="form-control" id="editImage" name="image" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editOfferingName" class="form-label">Offering Name</label>
+                            <input type="text" v-model="selectedOffering.offeringName" class="form-control"
+                                id="editOfferingName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea v-model="selectedOffering.description" class="form-control" id="editDescription"
+                                required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" v-model="selectedOffering.price" class="form-control"
+                                id="editPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPreparetime" class="form-label">Prepare Time (in minutes)</label>
+                            <input type="number" v-model="selectedOffering.preparetime" class="form-control"
+                                id="editPreparetime" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" @click="updateSideOffering">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for confirming deletion of a side offering -->
+        <div class="modal fade" id="deleteSideOfferingModal" tabindex="-1" role="dialog"
+            aria-labelledby="deleteSideOfferingModalLabel" aria-hidden="true" ref="deleteModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteSideOfferingModalLabel">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"
+                            @click="closeDeleteModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete this side offering?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                            @click="closeDeleteModal">Cancel</button>
+                        <button type="button" class="btn btn-danger" @click="deleteSideOffering">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<script>
+    const app = Vue.createApp({
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                activeTab: 'Pizzas',
+                tabs: ['Pizzas', 'Side Offerings'],
+                pizzas: branchPizzasData,
+                sideOfferings: branchSideOfferingsData,
+                drinks: branchDrinksData,
+                selectedPizzaImage: '',
+                selectedSOImage: '',
+                modalGroup: null,
+                offeringToDelete: null,
+                selectedPizza: {
+                    pizzaName: '',
+                    pizzaDescription: '',
+                    sizes: []
+                },
+                sizes: [
+                    { size: 'Small', price: '', prepareTime: '' },
+                    { size: 'Medium', price: '', prepareTime: '' },
+                    { size: 'Large', price: '', prepareTime: '' },
+                ],
+                newPizza: {
+                    pizzaName: '',
+                    pizzaDescription: '',
+                    smallPrice: '',
+                    mediumPrice: '',
+                    largePrice: '',
+                    smallPrepareTime: '',
+                    mediumPrepareTime: '',
+                    largePrepareTime: ''
+                },
+                newSideOffering: {
+                    offeringName: '',
+                    description: '',
+                    price: '',
+                    preparetime: '',
+                },
+                selectedOffering: {
+                    sideOfferingID: null,
+                    offeringName: '',
+                    description: '',
+                    price: '',
+                    preparetime: ''
+                }
+            };
+        },
+        methods: {
+            showImgModal(group) {
+                this.selectedPizzaImage = '/static/image/' + group[0].pizzaID + '.jpg';
+                $('#imageModal').modal('show');
+            },
+            showImgModalSO(offering){
+                this.selectedSOImage = '/static/image/' + offering.sideOfferingID + '.jpg';
+                $('#imageModalSO').modal('show');
+            },
+            addPizza() {
+                const formData = new FormData();
+                formData.append('pizzaName', this.newPizza.pizzaName);
+                formData.append('pizzaDescription', this.newPizza.pizzaDescription);
+                formData.append('smallPrice', this.newPizza.smallPrice);
+                formData.append('mediumPrice', this.newPizza.mediumPrice);
+                formData.append('largePrice', this.newPizza.largePrice);
+                formData.append('smallPrepareTime', this.newPizza.smallPrepareTime);
+                formData.append('mediumPrepareTime', this.newPizza.mediumPrepareTime);
+                formData.append('largePrepareTime', this.newPizza.largePrepareTime);
+                formData.append('pizzaImage', document.getElementById('pizzaImage').files[0]);
+
+                axios.post('/branchAddPizza', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then(response => {
+                    if (response.data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to add pizza. Please try again.');
+                    }
+                });
+            },
+            deleteSingleSizePizza(pizzaID) {
+                if (confirm("Are you sure you want to deactivate this size of pizza?")) {
+                    axios.post('/branchDeactivateSingleSizePizza', { pizzaID: pizzaID })
+                        .then(response => {
+                            if (response.data.success) {
+                                // Update this pizza size's active status in the local list
+                                // Find the correct pizza group and update its active status
+                                const groupIndex = this.pizzas.findIndex(group => group.some(pizza => pizza.pizzaID === pizzaID));
+                                const pizzaIndex = this.pizzas[groupIndex].findIndex(pizza => pizza.pizzaID === pizzaID);
+                                this.pizzas[groupIndex][pizzaIndex].pizzaActive = false;
+                                // location.reload();
+                            } else {
+                                alert('Failed to deactivate. Please try again.');
+                            }
+                        });
+                }
+            },
+            resumeSingleSizePizza(pizzaID) {
+                if (confirm("Are you sure you want to resume this size of pizza?")) {
+                    axios.post('/branchActivateSingleSizePizza', { pizzaID: pizzaID })
+                        .then(response => {
+                            if (response.data.success) {
+                                const groupIndex = this.pizzas.findIndex(group => group.some(pizza => pizza.pizzaID === pizzaID));
+                                const pizzaIndex = this.pizzas[groupIndex].findIndex(pizza => pizza.pizzaID === pizzaID);
+                                this.pizzas[groupIndex][pizzaIndex].pizzaActive = true;
+                                location.reload();
+                            } else {
+                                alert('Failed to resume. Please try again.');
+                            }
+                        });
+                }
+            },
+            deleteEntirePizza(pizzaName) {
+                if (confirm("Are you sure you want to deactivate the entire pizza?")) {
+                    axios.post('/branchDeactivateEntirePizza', { pizzaName: pizzaName })
+                        .then(response => {
+                            if (response.data.success) {
+                                const groupIndex = this.pizzas.findIndex(group => group[0].pizzaName === pizzaName);
+                                this.pizzas[groupIndex].forEach(pizza => pizza.pizzaActive = false);
+                                location.reload();
+                            } else {
+                                alert('Failed to deactivate. Please try again.');
+                            }
+                        });
+                }
+            },
+            openEditPizzaModal(pizzaGroup) {
+                // Save the original pizza name for future reference
+                this.selectedPizza.originalPizzaName = pizzaGroup[0].pizzaName;
+                this.selectedPizza.pizzaName = pizzaGroup[0].pizzaName;
+                this.selectedPizza.pizzaDescription = pizzaGroup[0].description;
+
+                // use the default sizes to populate the selectedPizza object
+                this.selectedPizza.sizes = this.sizes.map(defaultSize => {
+                    const matchedSize = pizzaGroup.find(pizza => pizza.size === defaultSize.size);
+                    if (matchedSize) {
+                        return {
+                            size: defaultSize.size,
+                            price: matchedSize.price,
+                            prepareTime: matchedSize.preparetime
+                        };
+                    } else {
+                        return {
+                            size: defaultSize.size,
+                            price: '',
+                            prepareTime: ''
+                        };
+                    }
+                });
+                $('#editPizzaModal').modal('show');
+            },
+            updatePizza() {
+                const formData = new FormData();
+                formData.append('pizzaOriginalName', this.selectedPizza.originalPizzaName); // Original name
+                formData.append('pizzaName', this.selectedPizza.pizzaName); // New name
+                formData.append('description', this.selectedPizza.pizzaDescription);
+                this.selectedPizza.sizes.forEach(size => {
+                    formData.append(`${size.size.toLowerCase()}Price`, size.price);
+                    formData.append(`${size.size.toLowerCase()}PrepareTime`, size.prepareTime);
+                });
+                if (document.getElementById('editPizzaImage').files.length > 0) {
+                    formData.append('pizzaImage', document.getElementById('editPizzaImage').files[0]);
+                }
+                axios.post('/branchUpdatePizza', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then(response => {
+                    if (response.data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to update pizza. Please try again.');
+                    }
+                });
+            },
+            addSideOffering() {
+                const formData = new FormData();
+                formData.append('offeringName', this.newSideOffering.offeringName);
+                formData.append('description', this.newSideOffering.description);
+                formData.append('price', this.newSideOffering.price);
+                formData.append('preparetime', this.newSideOffering.preparetime);
+                formData.append('image', document.getElementById('image').files[0]);
+                axios.post('/branchAddSideOffering', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then(response => {
+                    if (response.data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to add side offering. Please try again.');
+                    }
+                });
+            },
+            openEditModal(offering) {
+                this.selectedOffering = Object.assign({}, offering); // clone the object
+                $('#editSideOfferingModal').modal('show');  // Using Bootstrap's modal JS
+            },
+            updateSideOffering() {
+                const formData = new FormData();
+                formData.append('sideOfferingID', this.selectedOffering.sideOfferingID);
+                formData.append('offeringName', this.selectedOffering.offeringName);
+                formData.append('description', this.selectedOffering.description);
+                formData.append('price', this.selectedOffering.price);
+                formData.append('preparetime', this.selectedOffering.preparetime);
+                if (document.getElementById('editImage').files.length > 0) {
+                    formData.append('image', document.getElementById('editImage').files[0]);
+                }
+                axios.post('/branchUpdateSideOffering', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }).then(response => {
+                    if (response.data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to update side offering. Please try again.');
+                    }
+                });
+            },
+            closeDeleteModal() {
+                $(this.$refs.deleteModal).modal('hide');
+            },
+            setOfferingToDelete(offering) {
+                this.offeringToDelete = offering;
+            },
+            deleteSideOffering() {
+                axios.post('/branchDeleteSideOffering', {
+                    sideOfferingID: this.offeringToDelete.sideOfferingID
+                }).then(response => {
+                    if (response.data.success) {
+                        location.reload();
+                    } else {
+                        alert('Failed to delete side offering. Please try again.');
+                    }
+                });
+                this.closeDeleteModal();
+            },
+            changeTab(tab) {
+                this.activeTab = tab;
+            }
+        }
+    });
+    app.mount('#app');
+</script>
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+{% endblock %}

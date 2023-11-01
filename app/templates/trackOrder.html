@@ -1,0 +1,815 @@
+{% extends 'base.html' %} {% block title %}My orders{% endblock %} {% block
+content %}
+
+<div id="trackOrderApp" class="container-fluid py-3 bg-body-tertiary">
+    <div class="my-1 bg-body-tertiary">
+    <!-- ... (breadcrumb code) ... -->
+    </div>
+    <div class="container mt-4 col-lg-12">
+
+      <!-- live pizza tracker -->
+      <div class="pizza-tracker">
+        <svg
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+        <linearGradient id="progressGradient">
+            <stop offset="0%" stop-color="white" />
+            <stop offset="50%" stop-color="#af675b" />
+            <stop offset="100%" stop-color="#b01e07" />
+          </linearGradient>
+
+          <mask id="progressMask">
+            <path fill="white" transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)" d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377 c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412 -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795 -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3 957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6 1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3 -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z" />
+          </mask>
+             
+          <g
+            :class="{ 'arrow-stage': true, 'done': orderPlaced }"
+            fill=""
+            stroke="none"
+          >
+            <path 
+              transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+          <rect v-if="!orderPlaced" width="100%" height="100%" fill="url(#progressGradient)" mask="url(#progressMask)" style="z-index: 999;">
+            <!-- Animate the mask's position to indicate progress -->
+            <animateTransform attributeName="transform" attributeType="XML" type="translate" from="-300 0" to="0 0" dur="2s" begin="0s" repeatCount="indefinite" />
+          </rect>
+
+          <text
+            x="53%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+            Order placed
+          </text>
+        </svg>
+        <svg
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <g
+            :class="{ 'arrow-stage': true, 'done': orderInOven }"
+            transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+            fill="none"
+            stroke="none"
+          >
+            <path
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+
+          <rect v-if="orderUnderProcess && !orderInOven" width="100%" height="100%" fill="url(#progressGradient)" mask="url(#progressMask)" style="z-index: 999;">
+            <!-- Animate the mask's position to indicate progress -->
+            <animateTransform attributeName="transform" attributeType="XML" type="translate" from="-300 0" to="0 0" dur="2s" begin="0s" repeatCount="indefinite" />
+          </rect>
+
+         
+          
+          <text
+            x="54%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+            [[ orderProcessingText ]]
+          </text>
+        </svg>
+        <svg v-if="cart.some(item => item.id < 200)"
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+
+          <g
+            :class="{ 'arrow-stage': true, 'done': qualityChecking }"
+            transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+            fill=""
+            stroke="none"
+          >
+            <path
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+
+            <rect v-if="orderInOven && !qualityChecking" width="100%" height="100%" fill="url(#progressGradient)" mask="url(#progressMask)" style="z-index: 999;">
+              <!-- Animate the mask's position to indicate progress -->
+              <animateTransform attributeName="transform" attributeType="XML" type="translate" from="-300 0" to="0 0" dur="2s" begin="0s" repeatCount="indefinite" />
+            </rect>
+
+
+          <text
+            x="53%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+            [[ orderInOvenText ]]
+          </text>
+        </svg>
+        <svg
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+        
+          <g
+            :class="{ 'arrow-stage': true, 'done': readyInStore }"
+            transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+            fill=""
+            stroke="none"
+          >
+            <path
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+            <rect v-if="qualityChecking && !readyInStore" width="100%" height="100%" fill="url(#progressGradient)" mask="url(#progressMask)" style="z-index: 999;">
+              <!-- Animate the mask's position to indicate progress -->
+              <animateTransform attributeName="transform" attributeType="XML" type="translate" from="-300 0" to="0 0" dur="2s" begin="0s" repeatCount="indefinite" />
+            </rect>
+
+          <text
+            x="53%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+           [[ qualityCheckingText ]]
+          </text>
+        </svg>
+        <svg
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+        
+          <g
+            :class="{ 'arrow-stage': true, 'done': orderOnTheWay  }"
+            transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+            fill=""
+            stroke="none"
+          >
+            <path
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+            <rect v-if="readyInStore && !orderOnTheWay" width="100%" height="100%" fill="url(#progressGradient)" mask="url(#progressMask)" style="z-index: 999;">
+              <!-- Animate the mask's position to indicate progress -->
+              <animateTransform attributeName="transform" attributeType="XML" type="translate" from="-300 0" to="0 0" dur="2s" begin="0s" repeatCount="indefinite" />
+            </rect>
+
+          <text
+            x="53%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+            Ready in store
+          </text>
+        </svg>
+        <svg
+          v-if="orderMethod !== 'Pick Up'"
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+        
+          <g
+            :class="{ 'arrow-stage': true, 'done': orderDelivered }"
+            transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+            fill=""
+            stroke="none"
+          >
+            <path
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+            <rect v-if="orderOnTheWay && !orderDelivered" width="100%" height="100%" fill="url(#progressGradient)" mask="url(#progressMask)" style="z-index: 999;">
+              <!-- Animate the mask's position to indicate progress -->
+              <animateTransform attributeName="transform" attributeType="XML" type="translate" from="-300 0" to="0 0" dur="2s" begin="0s" repeatCount="indefinite" />
+            </rect>
+
+          <text
+            x="53%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+            Order on the way
+          </text>
+        </svg>
+        <svg
+          v-if="orderMethod !== 'Pick Up'"
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+        
+          <g
+            :class="{ 'arrow-stage': true, 'done': orderDelivered }"
+            transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+            fill=""
+            stroke="none"
+          >
+            <path
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+          <text
+            x="53%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+            Order delivered
+          </text>
+        </svg>
+        <svg
+          v-if="orderMethod == 'Pick Up'"
+          version="1.0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="300px"
+          height="200px"
+          viewBox="0 0 1920.000000 963.000000"
+          preserveAspectRatio="xMidYMid meet"
+        >
+        
+          <g
+            :class="{ 'arrow-stage': true, 'done': orderDelivered }"
+            transform="translate(0.000000,963.000000) scale(0.100000,-0.100000)"
+            fill=""
+            stroke="none"
+          >
+            <path
+              d="M93 9509 c36 -68 581 -1135 1212 -2371 l1146 -2248 -1225 -2377
+            c-674 -1307 -1226 -2385 -1226 -2395 0 -17 19 -18 373 -19 204 -1 390 -2 412
+            -4 22 -1 744 -5 1605 -9 861 -3 1637 -8 1725 -11 88 -3 810 -7 1605 -10 795
+            -3 1573 -7 1730 -10 157 -3 872 -7 1590 -10 718 -3 1499 -7 1735 -10 237 -3
+            957 -7 1600 -10 644 -3 1424 -7 1735 -10 311 -3 1029 -8 1595 -11 l1030 -6
+            1230 2437 c677 1340 1231 2442 1233 2449 2 9 -2442 4668 -2462 4692 -2 3
+            -2693 13 -4676 19 -4237 12 -5302 15 -10113 31 l-1919 7 65 -124z"
+            />
+          </g>
+
+          <text
+            x="53%"
+            y="53%"
+            text-anchor="middle"
+            class="stage-text"
+          >
+            Order picked up
+          </text>
+        </svg>
+        </div>
+      
+      <div id="main-container">
+      
+          <div class="row justify-content-center">
+      
+              <!-- Order Details Column -->
+              <div class="col-lg-5 mb-4 mx-3">
+                  <div class="card">
+                      <div class="card-header">Order details</div>
+                      <div class="card-body px-4">
+                        <ul class="mb-1">
+                          <!-- Items Loop -->
+                          <li v-for="item in cart" :key="item.id" class="order-item mb-1">
+                              <div v-if="item.id >= 200">
+                                <span>[[item.name]]: $[[item.price]] x [[item.number]]</span>
+                              </div>
+                              <div v-if="item.id &lt; 200">
+                                  <span>[[item.name]]-[[item.size.value]]: $[[item.size.price]] x [[item.number]]</span>
+                                  <div v-if="item.toppings.reduce((acc, curr) => acc + curr.quantity, 0) > 0">
+                                    toppings:
+                                    <div v-for="topping in item.toppings">
+                                      <div v-if="topping.quantity > 0">
+                                      <span>[[topping.name]]: $[[topping.price]] x [[topping.quantity]]</span>
+                                    
+                                      </div>
+                                    </div>
+                                  </div>
+                              </div>
+                          </li>
+                        </ul>
+      
+                        <hr>
+      
+                        <span><strong>Total amount:</strong> $[[totalAmount]]</span>
+                        <span><strong>Ordered at:</strong> [[formatDateTime(orderSubmitTime)]]</span>
+                        <span v-if="orderMethod === 'Delivery'"><strong>Specified delivery time:</strong> [[formatDateTime(specifiedPickupOrDeliveryTime)]]</span>
+                        <span v-if="orderMethod === 'Pick Up'"><strong>Specified pick up time:</strong> [[formatDateTime(specifiedPickupOrDeliveryTime)]]</span>
+                        <span><strong>Delivery option:</strong> [[orderMethod]]</span>
+                        <span v-if="specialRequest"><strong>Special Request:</strong> [[specialRequest]]</span>
+                      </div>
+                  </div>
+              </div>
+      
+              <!-- Delivery/Pickup Info Column -->
+              <div class="col-lg-5 mb-4 mx-3">
+                  <div class="card">
+                      <div class="card-header" v-if="orderMethod === 'Pick Up'">Pickup Information</div>
+                      <div class="card-header" v-if="orderMethod === 'Delivery'">Delivery Information</div>
+                      <div class="card-body px-4">
+                        <div v-if="orderMethod === 'Pick Up'">
+                          <p><strong>stimated available time for pick up:</strong> [[ formatDateTime(estimatedPickupOrDeliveryTime)]]</p>
+                          <p><strong>Pick up address:</strong> [[ branchInfo.address]]</p>
+                          <p><strong>Branch name:</strong> [[ branchInfo.branchName ]]</p>
+                          <p><strong>Opening hours:</strong> [[ branchInfo.startTime]] - [[ branchInfo.endTime]]</p>
+                          <p><strong>Contact us:</strong></p>
+                          <ul>
+                            <li><strong>Phone:</strong> [[ branchInfo.phoneNumber]]</li>
+                            <li><strong>Email:</strong> [[ branchInfo.email]]</li>
+                          </ul>
+                        </div>
+    
+                        <div v-else>
+                          <p><strong>Estimated delivery time:</strong> [[ formatDateTime(estimatedPickupOrDeliveryTime) ]]</p>
+                          <p><strong>Dilivery address:</strong> [[ customerInfo.Address]]</p>
+                          <p><strong>Customer information: </strong>[[ customerInfo.title ]] [[ customerInfo.firstName]] [[ customerInfo.lastName]]</p>
+                          <p><strong>Customer phone number: </strong>[[ customerInfo.phoneNumber]]</p>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+           <!-- Map (only if delivery) -->
+           <div v-if="orderMethod === 'Delivery'" class="col-md-10 my-4 mx-auto">
+            <div id="map"></div>
+          </div>
+
+        <!-- rate the order -->
+          <div class="row mt-5">
+            <div class="card col-11 mx-auto text-center p-5">
+              <h4>Rate the order</h4>
+              <div class="review">
+                <span 
+                  class="star" 
+                  v-for="index in 5" 
+                  :key="index"
+                  @mouseover="hoverRating = index"
+                  @mouseleave="hoverRating = 0"
+                  @click="rating = index"
+                >
+                  <i :class="getStarClass(index)"></i>
+                </span>
+              </div>
+              <div v-if="feedbackMessage && hasReview" class="alert alert-success mt-3">
+                [[ feedbackMessage ]]
+              </div>
+              <form @submit.prevent="handleSubmit" class="mt-3 d-flex flex-column justify-content-center align-items-center">
+                <textarea class="col-8 my-4" id="comment" name="review" rows="6" cols="50" v-model="review"></textarea>
+                <button type="submit" :disabled="hasReview || !rating" :class="{ 'disabled-button': hasReview || !rating }">Submit</button>
+              </form>
+            </div>
+          </div>
+
+
+
+      </div>
+      
+      </div>
+    </div>
+</div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+
+  <script>
+
+    let order = {{ order | tojson | safe }};
+
+    const app = Vue.createApp({
+      delimiters: ['[[', ']]'],
+      data() {
+        return {
+          orderID: order.orderID,
+          cart: order.cart,
+          totalAmount: order.totalAmount,
+          specialRequest: order.specialRequests,
+          customerInfo: order.customerInfo,
+          branchInfo: order.branchInfo,
+          orderMethod: order.orderMethod,
+          specifiedPickupOrDeliveryTime: new Date(order.specifiedPickupOrDeliveryTime),
+          orderSubmitTime: new Date(order.orderSubmitTime),
+          // estimatedDeliveryTime: this.orderMethod === 'Pick Up' ? 0 : 30,
+          // startTime: getCookie("startTimeAndStatus")? new Date(getCookie("startTimeAndStatus").value1) : null,
+          orderStatus: order.orderStatus,
+          orderPlaced: false,
+          orderUnderProcess: false,
+          // orderUnderProcess: getCookie("startTimeAndStatus")? getCookie("startTimeAndStatus").value2 === 'true' : false,
+          orderInOven: false,
+          qualityChecking: false,
+          readyInStore: false,
+          orderOnTheWay: false,
+          orderDelivered: false,
+          orderProcessingText: 'Order processing',
+          qualityCheckingText: 'Quality checking',
+          orderInOvenText: 'Order in oven',
+          rating: 0,       // The current rating set by the user
+          hoverRating: 0,  // The rating while hovering over the stars
+          initialRating: order.reviewInfo ? order.reviewInfo.rating: 0,
+          initialReview: order.reviewInfo ? order.reviewInfo.review : "",
+          review: "",
+          feedbackMessage: '',
+          hasReview: order.reviewInfo? true : false
+        };
+      },
+      computed: {
+        orderProcessTime() {
+            let processTime = 0;
+            this.cart.forEach((item) => {
+                  if (item.id < 200){
+                      processTime += 2; // assume each pizza takes 2 minutes to process
+                  }
+                });
+            return processTime;
+        },
+        orderTotalCookingTime() {
+              let totalTime = this.orderProcessTime;
+              let maxTime = 0;
+              this.cart.forEach((item) => {
+                  if (item.preparetime > maxTime){
+                      maxTime = item.preparetime;
+                  }
+              });
+              totalTime += maxTime;
+              return totalTime;
+            },
+        estimatedPickupOrDeliveryTime(){
+          let estimatedCompletionTime;
+          if(this.orderMethod === 'Pick Up' ){
+            estimatedCompletionTime = new Date(this.orderSubmitTime.getTime() + this.orderTotalCookingTime * 60 * 1000);
+          } else if (this.orderMethod === 'Delivery'){
+            estimatedCompletionTime = new Date(this.orderSubmitTime.getTime() + this.orderTotalCookingTime * 60 * 1000 + 30 * 60 * 1000); // assume 30 minutes delivery time
+          }
+          return this.specifiedPickupOrDeliveryTime > estimatedCompletionTime ? this.specifiedPickupOrDeliveryTime : estimatedCompletionTime;
+        }
+
+        // orderInOvenTime(){
+        //     return this.orderTotalCookingTime - this.orderProcessTime;
+        // },
+        // orderQuantityCheckingTime(){
+        //     return 1;
+        // },
+        // orderReadyInStoreTime(){
+        //     return 0.5;
+        // },
+        // orderOnTheWayTime(){
+        //     return this.estimatedDeliveryTime;
+        // },
+        // orderTotalTime(){
+        //     return this.orderTotalCookingTime + this.orderQuantityCheckingTime + this.orderReadyInStoreTime +  this.orderOnTheWayTime;
+        // }
+
+      },
+      created() {
+        this.rating = this.initialRating;
+        this.review = this.initialReview;
+        this.initWebSocket();
+        const statuses = ['Unpaid', 'Paid', 'Processing', 'In Oven', 'Quality Checking', 'Ready In Store', 'On The Way', 'Delivered','Done'];
+        const index = statuses.indexOf(this.orderStatus);
+
+        if(index >= 0){
+          this.orderPlaced = index > 0;
+          this.orderUnderProcess = index > 1;
+          this.orderInOven = index > 2;
+          this.qualityChecking = index > 3;
+          this.readyInStore = index > 4;
+          this.orderOnTheWay = index > 5;
+          this.orderDelivered = index > 6;
+        }
+
+        // console.log(this.orderPlaced, this.orderUnderProcess, this.orderInOven,this.qualityChecking, this.readyInStore, this.orderOnTheWay, this.orderDelivered)
+
+        // const timeArray = [this.orderProcessTime, this.orderInOvenTime, this.orderQuantityCheckingTime, this.orderReadyInStoreTime, this.orderOnTheWayTime];
+        // const currentTime = new Date();
+        // const timeDifference = (this.specifiedPickupOrDeliveryTime - currentTime)/60000;
+        
+        // if (this.orderUnderProcess === false && timeDifference > this.orderTotalTime){
+        //     this.startTime = new Date(this.specifiedPickupOrDeliveryTime.getTime() - this.orderTotalTime * 60000);
+        //     setStartTimeAndStatusCookie('startTimeAndStatus', this.startTime, false, 1);
+        //     setTimeout(() => {
+        //         this.orderUnderProcess = true;
+        //     }, (timeDifference - this.orderTotalTime) * 60000);    
+        // } else if (this.orderUnderProcess === false && timeDifference >= 0  && timeDifference <= this.orderTotalTime){
+        //     this.startTime = new Date();
+        //     setStartTimeAndStatusCookie('startTimeAndStatus', this.startTime, true, 1);
+        //     setTimeout(() => {
+        //         this.orderUnderProcess = true;
+        //     }, 0);   
+        // } else if (this.orderUnderProcess === true && timeDifference <= this.orderTotalTime){
+        //     let lapsedTime = (currentTime - this.startTime)/60000;
+
+        //     if (lapsedTime > 0 && lapsedTime < timeArray[0]){
+        //         setTimeout(() => {
+        //         this.orderInOven = true;
+        //         this.orderProcessingText = 'Order processed';
+        //     }, (timeArray[0] - lapsedTime)* 60000);   
+        //     } else if (lapsedTime > timeArray[0] && lapsedTime < timeArray[0] + timeArray[1] ){ 
+        //         this.orderInOven = true;
+        //         this.orderProcessingText = 'Order processed';
+        //         setTimeout(() => {
+        //         this.qualityChecking = true;
+        //         this.orderInOvenText = 'Order cooked';
+        //         }, (timeArray[0] + timeArray[1] - lapsedTime)* 60000); 
+        //     } else if (lapsedTime > timeArray[0] + timeArray[1] &&  lapsedTime < timeArray[0] + timeArray[1] + timeArray[2]) { 
+        //         this.orderInOven = true;
+        //         this.orderProcessingText = 'Order processed';
+        //         this.qualityChecking = true;
+        //         this.orderInOvenText = 'Order cooked';
+        //         setTimeout(() => {
+        //         this.readyInStore = true;
+        //         this.qualityCheckingText = 'Quality checked';
+        //         }, (timeArray[0] + timeArray[1] + timeArray[2] - lapsedTime)* 60000); 
+        //     } else if (lapsedTime > timeArray[0] + timeArray[1] + timeArray[2] && lapsedTime < timeArray[0] + timeArray[1] + timeArray[2] + timeArray[3]) { 
+        //         this.orderInOven = true;
+        //         this.orderProcessingText = 'Order processed';
+        //         this.qualityChecking = true;
+        //         this.orderInOvenText = 'Order cooked';
+        //         this.readyInStore = true;
+        //         this.qualityCheckingText = 'Quality checked';
+        //         setTimeout(() => {
+        //         this.orderOnTheWay = true;
+        //         }, (timeArray[0] + timeArray[1] + timeArray[2] + timeArray[3] - lapsedTime)* 60000); 
+        //     } else if (lapsedTime > timeArray[0] + timeArray[1] + timeArray[2] + timeArray[3] && lapsedTime < timeArray[0] + timeArray[1] + timeArray[2] + timeArray[3] + timeArray[4]){
+        //         this.orderInOven = true;
+        //         this.orderProcessingText = 'Order processed';
+        //         this.qualityChecking = true;
+        //         this.orderInOvenText = 'Order cooked';
+        //         this.readyInStore = true;
+        //         this.qualityCheckingText = 'Quality checked';
+        //         this.orderOnTheWay = true;
+        //         setTimeout(() => {
+        //             this.orderDelivered = true;
+        //         }, (timeArray[0] + timeArray[1] + timeArray[2] + timeArray[3] + timeArray[4] - lapsedTime)* 60000); 
+        //     }
+        //     if (lapsedTime > timeArray[0] + timeArray[1] + timeArray[2] + timeArray[3] + timeArray[4]){
+        //         this.orderInOven = true;
+        //         this.orderProcessingText = 'Order processed';
+        //         this.qualityChecking = true;
+        //         this.orderInOvenText = 'Order cooked';
+        //         this.readyInStore = true;
+        //         this.qualityCheckingText = 'Quality checked';
+        //         this.orderOnTheWay = true;
+        //         this.orderDelivered = true;
+        //     }
+        //     }
+      },
+      watch: {
+        rating(newRating) {
+          if(newRating !== this.initialRating){
+            this.hasReview = false;
+          }
+        },
+        review(newReview) {
+          if(newReview !== this.initialReview){
+            this.hasReview = false;
+          }
+        }
+        // orderUnderProcess(newStatus) {
+        //     if (newStatus) {
+        //         setTimeout(() => {
+        //             this.orderInOven = true;
+        //             this.orderProcessingText = 'Order processed';
+        //         }, this.orderProcessTime * 60000);
+        //     }
+        // },
+        // orderInOven(newStatus) {
+        //     if (newStatus) {
+        //     setTimeout(() => {
+        //         this.qualityChecking = true;
+        //         this.orderInOvenText = 'Order cooked';
+        //     }, (this.orderInOvenTime) * 60000);
+        //     }
+        // },
+        // qualityChecking(newStatus) {
+        //     if (newStatus) {
+        //     setTimeout(() => {
+        //         this.readyInStore = true;
+        //         this.qualityCheckingText = 'Quality checked';
+        //     }, this.orderQuantityCheckingTime * 60000);
+        //     }
+        // },
+        // readyInStore(newStatus) {
+        //     if (newStatus && this.orderMethod === 'Delivery') {
+        //     setTimeout(() => {
+        //         this.orderOnTheWay = true;
+        //     }, this.orderReadyInStoreTime * 60000);
+        //     }
+        // },
+        // orderOnTheWay(newStatus) {
+        //     if (newStatus && this.orderMethod === 'Delivery') {
+        //     setTimeout(() => {
+        //         this.orderDelivered = true;
+        //     }, this.orderOnTheWay * 60000);
+        //     }
+        // }
+      },
+
+      methods: {
+        initWebSocket(){
+          this.socket = io.connect('http://127.0.0.1:5000');
+          this.socket.on('statusChanged', this.handleStatusChanged);
+          this.socket.on('connect', this.handleConnect);
+          this.socket.on('disconnect', this.handleDisconnect);
+        },
+        handleStatusChanged(data){
+          const statuses = ['Unpaid', 'Paid', 'Processing', 'In Oven', 'Quality Checking', 'Ready In Store', 'On The Way', 'Delivered','Done'];
+          if(data.orderID === this.orderID){
+              const index = statuses.indexOf(data.newStatus);
+
+              if(index >= 0){
+                this.orderPlaced = index > 0;
+                this.orderUnderProcess = index > 1;
+                this.orderInOven = index > 2;
+                this.qualityChecking = index > 3;
+                this.readyInStore = index > 4;
+                this.orderOnTheWay = index > 5;
+                this.orderDelivered = index > 6;
+              }
+          }
+          // console.log(this.orderPlaced, this.orderUnderProcess, this.orderInOven,this.qualityChecking, this.readyInStore, this.orderOnTheWay, this.orderDelivered)
+        },
+        handleConnect(){
+          console.log("Successfully connected to server");
+        },
+        handleDisconnect() {
+            console.log('Disconnected from the server.');
+        },
+        formatDateTime(inputTime) {
+            const date = new Date(inputTime);
+            const day = date.toDateString().split(' ')[0];
+            const month = date.toDateString().split(' ')[1];
+            const dayOfMonth = date.getDate();
+            const year = date.getFullYear();
+            const time = date.toTimeString().split(' ')[0].slice(0, -3);
+            
+            return `${time}, ${day}, ${month} ${dayOfMonth} ${year}`;
+        },
+        getStarClass(index) {
+            if (this.hoverRating >= index) {
+              return 'fas fa-star';
+            } else if (this.rating >= index) {
+              return 'fas fa-star';
+            } else {
+              return 'far fa-star';
+            }
+        },
+        setRating(index) {
+            this.rating = index;
+        },
+        async handleSubmit() {
+        try {
+            let response = await axios.post('/customer/review', {
+                customerID: this.customerInfo.customerID,
+                orderID: this.orderID,
+                reviewDate: new Date(),
+                rating: this.rating,
+                review: document.getElementById("comment").value
+            });
+            
+            if(response.data.success) {
+                this.feedbackMessage = response.data.message;
+                this.hasReview = true;
+            } else {
+                // Handle error scenario (e.g., show an error message)
+            }
+        } catch (error) {
+            console.error("Error submitting the review:", error);
+            // Optionally show an error to the user
+        }
+    }
+      },
+      mounted() {
+        // map API
+
+        if(this.orderMethod === 'Delivery'){
+          var map = L.map('map').setView(order.branchInfo.GPS, 13);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            var marker = L.marker(order.branchInfo.GPS).addTo(map);
+            marker.bindPopup(`<b>${order.branchInfo.branchName}</b>`);
+        }
+      }
+    });
+
+    app.mount('#trackOrderApp');
+
+    // function setStartTimeAndStatusCookie(name, value1, value2, days){
+    //     const expires = new Date();
+    //     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+
+    //     const aucklandTimezoneOffset = -12 * 60;
+    //     expires.setMinutes(expires.getMinutes() - aucklandTimezoneOffset);
+    //     const expiresString = `expires=${expires.toUTCString()}`;
+    //     document.cookie = `${name}=${value1}::${value2}; ${expiresString}; path=/customer/trackOrder/${order.orderID}`;
+    //     // console.log(document.cookie);
+    // }
+
+    // function getCookie(name) {
+    //     const cookieName = name + '=';
+    //     const cookies = document.cookie.split(';');
+    //     for (let i = 0; i < cookies.length; i++) {
+    //         let cookie = cookies[i].trim();
+    //         if (cookie.indexOf(cookieName) === 0) {
+    //             const cookieValue = cookie.substring(cookieName.length);
+    //             const values = cookieValue.split('::');
+    //             if (values.length === 2) {
+    //                 const value1 = values[0];
+    //                 const value2 = values[1];
+    //                 return { value1, value2 };
+    //             }
+    //         }
+    //     }
+    //     return null; // Cookie not found or invalid format
+    // }
+
+    
+    
+  </script>
+
+
+    
+
+
+  {% endblock %}
+</div>

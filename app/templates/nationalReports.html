@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}National Reports{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{url_for('adminDashboard1.adminDashboard1')}}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Reports</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="container mt-3" id="nationalApp">
+    <h1>National Statistics</h1>
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs mt-3 mb-3" style="font-size: 18px; font-weight: bold;" id="myTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="display-tab" data-bs-toggle="tab" href="#overview" role="tab"
+                aria-controls="display" aria-selected="true">Business Overview</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="edit-tab" data-bs-toggle="tab" href="#revenue" role="tab" aria-controls="edit"
+                aria-selected="false">Orders</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" id="drinks-tab" data-bs-toggle="tab" href="#topSales" role="tab" aria-controls="drinks"
+                aria-selected="false">Top Sales</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="toppings-tab" data-bs-toggle="tab" href="#promotion" role="tab"
+                aria-controls="toppings" aria-selected="false">Promotions</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+
+        <!-- Overview tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="display-tab">
+            <div class="mb-4 px-3 col-md-6">
+                <h2>Business Overview</h2>
+                <p class="m-0">(Since opening)</p>
+                <hr>
+                <p class="m-0">Revenue: $[[nationalInfo.totalAmounts.total]]</p>
+                <p class="m-0">Orders: [[nationalInfo.totalOrder.total]]</p>
+                <p class="m-0">Customers: [[nationalInfo.totalCustomer.total]]</p>
+            </div>
+
+        </div>
+
+        <!-- Revenue tab -->
+        <div class="tab-pane fade mb-4 px-3" id="revenue" role="tabpanel" aria-labelledby="revenue">
+            <h2 class="">Orders</h2>
+            <div class="row">
+
+                <div class="col-md-12">
+                    <h4 class="my-2">Across 30 days</h4>
+                    <table class="table table-striped table-hover"
+                        v-if="nationalInfo.orders30Days && nationalInfo.orders30Days.length">
+                        <thead>
+                            <tr>
+                                <th>Order Date</th>
+                                <th>BranchID</th>
+                                <th>Option</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr v-for="i in nationalInfo.orders30Days" :key="i.productID">
+                                    <td>[[ new Date(i.orderDate).toLocaleString('en-US', { year: 'numeric',
+                                        month: 'short', day:
+                                        '2-digit',timeZone: 'Pacific/Auckland' })
+                                        ]]</td>
+                                        <td>[[i.branchID]]</td>
+                                        <td>[[i.deliveryOption]]</td>
+                                    <td>$[[i.totalAmount]]</td>
+
+                            </tr>
+
+
+                        </tbody>
+                    </table>
+                    <p v-else>N/A</p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Top Sales tab -->
+        <div class="tab-pane fade mb-4 px-3" id="topSales" role="tabpanel" aria-labelledby="topSales">
+            <h2 class="">Top sales</h2>
+            <div class="row">
+
+                <div class="col-md-6">
+                    <h4 class="my-2">Across 30 days</h4>
+                    <table class="table table-striped table-hover"
+                        v-if="nationalInfo.topProducts30 && nationalInfo.topProducts30.length">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr v-for="i in nationalInfo.topProducts30" :key="i.productID">
+                                    <template v-if="i.count > 1">
+                                    <td>[[i.productID]]</td>
+                                    <td>[[i.count]]</td>
+                                </template>
+
+                            </tr>
+
+
+                        </tbody>
+                    </table>
+                    <p v-else>N/A</p>
+                </div>
+
+                <div class="col-md-6">
+                    <h4 class="my-2">Since opening</h4>
+                    <table class="table table-striped table-hover"
+                        v-if="nationalInfo.topProductsAll && nationalInfo.topProductsAll.length">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr v-for="i in nationalInfo.topProductsAll" :key="i.productID">
+                                    <template v-if="i.count > 1">
+                                    <td>[[i.productID]]</td>
+                                    <td>[[i.count]]</td>
+                                </template>
+
+                            </tr>
+
+
+                        </tbody>
+                    </table>
+                    <p v-else>N/A</p>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Promotion tab -->
+        <div class="tab-pane fade mb-4 px-3" id="promotion" role="tabpanel" aria-labelledby="promotion">
+            <div class="row">
+                <div class="col-md-10">
+                    <h2 class="my-2">Promotions</h2>
+                    <h4 class="my-4">Simple Promotions</h4>
+                    <table class="table table-striped table-hover"
+                        v-if="nationalInfo.simplePromo && nationalInfo.simplePromo.length">
+                        <thead>
+                            <tr>
+
+                                <th>branchID</th>
+                                <th>Type</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Threshold</th>
+                                <th>Discount</th>
+                                <th>Description</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+
+
+
+                            <tr v-for="i in nationalInfo.simplePromo" :key="i.promoID">
+                                <td>[[i.branchID]]</td>
+                                <td>[[i.promoType]]</td>
+                                <td>[[i.startDate]]</td>
+                                <td>[[i.endDate]]</td>
+                                <td>[[i.thresholdAmount]]</td>
+                                <td>[[i.discountAmount]]</td>
+                                <td>[[i.description]]</td>
+                            </tr>
+
+
+                        </tbody>
+                    </table>
+                    <p v-else>N/A</p>
+
+                    <h4 class="my-4">Combo Promotions</h4>
+                    <table class="table table-striped table-hover"
+                        v-if="nationalInfo.comboPromo && nationalInfo.comboPromo.length">
+                        <thead>
+                            <tr>
+
+                                <th>branchID</th>
+                                <th>Type</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Threshold</th>
+                                <th>Discount</th>
+                                <th>Description</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+
+
+
+                            <tr v-for="i in nationalInfo.comboPromo" :key="i.comboID">
+                                <td>[[i.branchID]]</td>
+                                <td>[[i.promoType]]</td>
+                                <td>[[i.startDate]]</td>
+                                <td>[[i.endDate]]</td>
+                                <td>[[i.thresholdAmount]]</td>
+                                <td>[[i.discountAmount]]</td>
+                                <td>[[i.description]]</td>
+                            </tr>
+
+
+                        </tbody>
+                    </table>
+                    <p v-else>N/A</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+
+<script>
+    {% if nationalInfo %}
+    var nationalInfo = JSON.parse({{ nationalInfo | tojson | safe }});
+    {% endif %}
+
+    const app = Vue.createApp({
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                nationalInfo: nationalInfo,
+            };
+        },
+        computed: {
+
+
+        }, methods: {
+
+        }, watch: {
+
+        }
+
+    });
+
+    const vm = app.mount('#nationalApp');
+</script>
+
+{% endblock %}

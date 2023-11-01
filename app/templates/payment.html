@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+
+{% block title %}Pay and order!{% endblock %}
+
+{% block content %}
+
+
+<div id="payment-app" class="container-fluid py-3 bg-body-tertiary">
+  <div class="container mx-auto">
+    <div>
+      <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="#">Home</a></li>
+          <li class="breadcrumb-item"><a href="{{url_for('customerDashboard.menu')}}">Menu</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Payment</li>
+        </ol>
+      </nav>
+    </div>
+
+    <div class="row g-5">
+      <div class="col-md-5 col-lg-4 order-md-last">
+        <h4 class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-primary">Order Information</span>
+        </h4>
+        <ul class="list-group mb-3">
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <h5 class="my-2"><strong>Your food</strong></h5>
+          </li>
+
+
+
+          {% for i in cart %}
+          {% if not loop.last and loop.index != loop.length - 1 %}
+          <li class="list-group-item d-flex justify-content-between lh-sm">
+            <div class="my-1">
+              <p class=""><strong>{{i['name']}} x {{i['number']}}</strong></p>
+              <ul class="mb-0 pl-3">
+
+                {% if 'label' in i.size and i.size.label %}
+                <li>{{ i.size.label }}</li>
+                {% endif %}
+                {% if 'toppings' in i and i.toppings %}
+                {% for t in i.toppings %}
+                {% if t.quantity > 0 %}
+                <li>{{ t.description }} (${{ t.price }}) x {{t.quantity}}</li>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+
+              </ul>
+            </div>
+            {%if 'size' in i%}
+            <span class="text-body-secondary">${{ (i.size.price|float + i.toppingPrice|float)|round(2) }}</span>
+            {%else%}
+            <span class="text-body-secondary">${{ (i.price|float + i.toppingPrice|float)|round(2) }}</span>
+            {% endif %}
+          </li>
+          {% endif %}
+          {% endfor %}
+
+
+
+          </li>
+          <div id="coupon" v-show="couponUsed">
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+              <h6 class="my-0">Coupon</h6>
+              <span class="text-body-secondary">- 10%</span>
+            </li>
+          </div>
+          <div id="deliveryFee">
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+              <h6 class="my-0">Delivery fee</h6>
+              <span class="text-body-secondary">$7</span>
+            </li>
+          </div>
+          
+          <li class="list-group-item d-flex justify-content-between">
+            <span>Total (After discount)</span>
+            <strong>$<span id="total-price" name="total-price">{{(cart[-1]|float + 7)|round(2)}}</span></strong>
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-7 col-lg-8">
+        <h2 class="mb-3">Delivery or takeaway?</h2>
+        <form @submit.prevent="handleSubmit" class="needs-validation" id="payment-form" novalidate=""
+          action="{{ url_for('customerDashboard.order')}}" method="POST">
+          <div class="row g-3">
+            <div class="row my-3 mx-1">
+              <div class="form-check col-sm-6">
+                <input v-model="deliverySelected" value="delivery" name="orderMethod" type="radio"
+                  class="form-check-input" checked required>
+                <label class="form-check-label" for="delivery">Delivery</label>
+              </div>
+              <div class="form-check col-sm-6">
+                <input v-model="deliverySelected" value="takeaway" name="orderMethod" type="radio"
+                  class="form-check-input">
+                <label class="form-check-label" for="takeaway">Takeaway</label>
+              </div>
+            </div>
+
+            <hr class="my-2">
+            <div class="col-sm-6">
+              <label for="firstName" class="form-label">First name</label>
+              <input type="text" class="form-control" id="firstName" placeholder=""
+                value="{{customerInfo['firstName']}}" required="" disabled>
+            </div>
+
+            <div class="col-sm-6">
+              <label for="lastName" class="form-label">Last name</label>
+              <input type="text" class="form-control" id="lastName" placeholder="" value="{{customerInfo['lastName']}}"
+                required="" disabled>
+            </div>
+
+            <div class="col-6">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" value="{{customerInfo['email']}}" disabled>
+              <div class="invalid-feedback">
+                Please enter a valid email address for shipping updates.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="phone" class="form-label">Phone Number</label>
+              <input type="text" class="form-control" id="phone" placeholder="" required=""
+                value="{{customerInfo['phoneNumber']}}" disabled>
+              <div class="invalid-feedback">
+                Phone number required.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="estimatedTime" class="form-label">Delivery/Pickup time (11am - 9pm)</label>
+              <input type="datetime-local" class="form-control"  id="estimatedTime" name="estimatedTime" v-model="deliveryTime" required=""
+                value="2023-10-14T16:30" :min="minDeliveryTime" :max="maxDeliveryTime">
+              <div class="invalid-feedback">
+                Delivery/Pickup time required.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="specialRequests" class="form-label">Special Requests</label>
+              <input type="text" class="form-control" id="specialRequests" name="specialRequests" placeholder="" value="">
+            </div>
+
+            <div v-show="showAddressInfo" id="addressDelivery">
+              <div class="col-md-12 py-2">
+                <label for="address" class="form-label">Address</label>
+                <input type="text" class="form-control" id="address" name="Address" placeholder="1234 Main St"
+                  value="{{customerInfo['Address']}}" :required="deliverySelected === 'delivery'">
+                <div class="invalid-feedback">
+                  Please enter your shipping address.
+                </div>
+              </div>
+              <div class="col-md-6 py-2">
+                <label for="zip" class="form-label">Postcode</label>
+                <input type="text" class="form-control" id="zip" name="zip" placeholder="" pattern="\d{4}" maxlength="4" value="1010" :required="deliverySelected === 'delivery'">
+                <div class="invalid-feedback">
+                  Postcode required.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <hr class="my-4">
+          
+
+          <h4 class="mb-3">Payment</h4>
+
+          <div class="my-3">
+            <div class="form-check">
+              <input id="credit" value="credit" v-model="paySelected" name="paymentMethod" type="radio"
+                class="form-check-input" required="" checked>
+              <label class="form-check-label" for="credit">Credit card</label>
+            </div>
+            <div class="form-check">
+              <input id="debit" value="debit" v-model="paySelected" name="paymentMethod" type="radio"
+                class="form-check-input" required="">
+              <label class="form-check-label" for="debit">Debit card</label>
+            </div>
+            <div class="form-check">
+              <input id="paypal" value="paypal" v-model="paySelected" name="paymentMethod" type="radio"
+                class="form-check-input" required="">
+              <label class="form-check-label" for="paypal">PayPal</label>
+            </div>
+          </div>
+
+          <div class="row gy-3" id="cardInfo" v-show="showCardInfo">
+            <div class="col-md-6">
+              <label for="cc-name" class="form-label">Name on card</label>
+              <input type="text" class="form-control" id="cc-name" name="cc-name" placeholder="" value = "Jone" :required="paySelected !== 'paypal'">
+              <small class="text-body-secondary">Full name as displayed on card</small>
+              <div class="invalid-feedback">
+                Name on card is required
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="cc-number" class="form-label">Credit card number</label>
+              <input type="text" class="form-control" id="cc-number" name="cc-number" placeholder="" value ="1234566789" :required="paySelected !== 'paypal'">
+              <div class="invalid-feedback">
+                Credit card number is required
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <label for="cc-expiration" class="form-label">Expiration</label>
+              <input type="month" class="form-control" id="cc-expiration" name="cc-expiration" placeholder="" value="2023-12" :required="paySelected !== 'paypal'" :min="minDate">
+              <div class="invalid-feedback">
+                Expiration date required
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <label for="cc-cvv" class="form-label">CVV</label>
+              <input type="text" class="form-control" id="cc-cvv" name="cc-cvv" placeholder="" pattern="\d{3}" value="123" :required="paySelected !== 'paypal'"
+                maxlength="3">
+              <div class="invalid-feedback">
+                Security code required
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <button class="w-100 btn btn-warning btn-lg" type="submit">Continue to checkout</button>
+        </form>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" style="display:none;">
+          <div id="loader"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<script>
+  var cartFromSession;
+
+  cartFromSession = {{ cartJs|safe }}
+
+  const app = Vue.createApp({
+    data() {
+      return {
+        deliverySelected: 'delivery',
+        paySelected: 'credit',
+        showCardInfo: true,
+        showAddressInfo: true,
+        cart: cartFromSession,
+        deliveryTime: "",
+        minDeliveryTime: "",
+        maxDeliveryTime: "",
+        couponUsed: false,
+        minDate: ""
+      };
+    },
+    computed: {
+
+    },created() {
+      if (this.cart[this.cart.length - 2] === true) {
+        this.couponUsed = true;
+      } else {
+        this.couponUsed = false;
+      }
+    },
+    watch: {
+      deliverySelected(value) {
+        const totalPriceElem = document.getElementById('total-price');
+        const deliveryFeeElem = document.getElementById('deliveryFee');
+        const addressDelivery = document.getElementById('addressDelivery');
+        let basePrice = parseFloat(totalPriceElem.innerText);
+        if (value === 'delivery') {
+          deliveryFeeElem.style.display = '';
+          this.showAddressInfo = true;
+          totalPriceElem.innerText = (basePrice + 7).toFixed(2);
+        } else {
+          deliveryFeeElem.style.display = 'none';
+          this.showAddressInfo = false;
+          totalPriceElem.innerText = (basePrice - 7).toFixed(2);
+        }
+      },
+
+      paySelected(value) {
+        if (value === 'paypal') {
+          this.showCardInfo = false;
+        } else if (value === 'credit' || value === 'debit') {
+          this.showCardInfo = true;
+        }
+      }
+
+    },
+
+    methods: {
+      handleSubmit() {
+        const form = this.$el.querySelector('form');
+
+        if (form.checkValidity() === false) {
+          form.reportValidity();
+          return;
+        }
+
+        // document.getElementById('loadingOverlay').style.display = 'flex';
+
+        axios.post('/checkout', { cart: this.cart, total: this.totalPrice, voucherApplied:this.voucherApplied })
+          .then((response) => {
+            if (response['result'] === false) {
+              var msg = 'Checkout/Payment Failed:\n\n';
+              for (var i = 0; i < response['msg'].length; i++) {
+                msg += response['msg'][i];
+              }
+              alert(msg);
+            } else {
+              this.$el.querySelector('form').submit();
+              // document.getElementById('loadingOverlay').style.display = 'none';
+            }
+          })
+      },
+    },
+    mounted() {
+      function toLocalISODateTimeString(date) {
+        const tzo = -date.getTimezoneOffset(),
+          dif = tzo >= 0 ? '+' : '-',
+          pad = function (num) {
+            const norm = Math.floor(Math.abs(num));
+            return (norm < 10 ? '0' : '') + norm;
+          };
+        return date.getFullYear() +
+          '-' + pad(date.getMonth() + 1) +
+          '-' + pad(date.getDate()) +
+          'T' + pad(date.getHours()) +
+          ':' + pad(date.getMinutes());
+      }
+      let now = new Date();
+      let startOfDay = new Date(now);
+      let endOfDay = new Date(now);
+
+      now.setMinutes(now.getMinutes() + 30);
+
+      startOfDay.setHours(11, 0, 0); // Set to 11:00 AM
+      endOfDay.setHours(20, 59, 59); // Set to 20:59:59 PM
+
+      if (now < startOfDay) {
+        this.deliveryTime = toLocalISODateTimeString(startOfDay);
+        this.minDeliveryTime = toLocalISODateTimeString(startOfDay);
+        this.maxDeliveryTime = toLocalISODateTimeString(endOfDay);
+      } else if (now > endOfDay) {
+        startOfDay.setDate(startOfDay.getDate() + 1);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        this.deliveryTime = toLocalISODateTimeString(startOfDay);
+        this.minDeliveryTime = toLocalISODateTimeString(startOfDay);
+        this.maxDeliveryTime = toLocalISODateTimeString(endOfDay);
+      } else {
+        this.deliveryTime = toLocalISODateTimeString(now);
+        this.minDeliveryTime = toLocalISODateTimeString(now);
+        this.maxDeliveryTime = toLocalISODateTimeString(endOfDay);
+      }
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+      this.minDate = formattedDate;
+    }
+  });
+
+  app.mount('#payment-app');
+
+</script>
+
+{% endblock %}

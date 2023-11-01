@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Branch Admin Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="dashboardHomepage">
+    <div class="container col-lg-12 mt-3 mb-5">
+        <div class="row">
+            <div class="mb-4 col-sm-6 col-lg-3 mb-4">
+                <div class="card my-2">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between  flex-column">
+                        <h3 >Branch Staffs</h3>
+                        <p>Staff Number: {{staff_count}}</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex align-items-center">
+                        <a href="{{url_for('adminDashboard2.branchStaffs')}}" type="button" class="btn btn-warning px-4 ">Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4 col-sm-6 col-lg-4 mb-4">
+                <div class="card my-2">
+                    <div class="card-body">
+                        <div class="d-flex flex-column  justify-content-between">
+                        <h3>Branch Products</h3>
+                        <p>Pizza Number: {{pizzaNum}}</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                       <div class="d-flex align-items-center">
+                        <a href="{{url_for('adminDashboard2.branchProducts')}}" type="button" class="btn btn-warning px-4 ">Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4 col-sm-6 col-lg-5 mb-4">
+                <div class="card my-2">
+                    <div class="card-body">
+                        <div class="d-flex flex-column  justify-content-between">
+                        <h3 >Branch Promotions</h3>
+                        <p>National Promotions Number: {{ nationalPromotionsNum }}</p>
+                        <p>Branch Promotions Number: {{ branchPromotionsNum }}</p>
+                        
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex align-items-center">
+                        <a href="{{url_for('adminDashboard2.branchPromotions')}}" type="button" class="btn btn-warning px-4 ">Details</a>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card my-2 mt-4">
+            <div class="text-center m-2 ">
+            <h3>Branch Orders</h3>
+            </div>
+            <div class="container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Orders Number</th>
+                            <th>Revene</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in order_data %}
+                        <tr>
+                            <td>{{ order.orderDay }}</td>
+                            <td>{{ order.totalOrders }}</td>
+                            <td>{{ order.totalSales }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+            </div>
+           
+            <button type="button" class="btn btn-warning px-4 my-2">Details</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

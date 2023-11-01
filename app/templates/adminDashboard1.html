@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %} All Branches{% endblock %}
+
+{% block content %}
+<style>
+    .borderr {
+        padding: 10px;
+        border: 1px solid #4CAF50;
+        margin-top: 20px;
+    }
+
+    .list-group {
+        position: sticky;
+        top: 120px;
+    }
+</style>
+
+<div class="container mt-4">
+    <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{url_for('adminDashboard1.adminDashboard1')}}">Dashboard</a></li>
+        </ol>
+    </nav>
+</div>
+
+<div class="container my-3">
+    <div class="row">
+        <div class="col-3">
+            <div id="list-example" class="list-group">
+                <button class="btn btn-success mb-2" data-bs-toggle="modal" data-bs-target="#branchModal">Add A New Branch</button>
+                {% for branch in branches %}
+                <a class="list-group-item list-group-item-action" href="#branch_{{ branch.branchID }}">{{
+                    branch.city }} {{ branch.branchName }}</a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- The add branch Modal -->
+        <div class="modal fade" id="branchModal" tabindex="-1" role="dialog" aria-labelledby="branchModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="branchModalLabel">Add A New Branch</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <form action="{{ url_for('adminDashboard1.addABranch') }}"  method="post">
+                        <div class="modal-body">
+                            <!-- Branch Name -->
+                            <div class="form-group">
+                                <label for="branchName">Branch Name:</label>
+                                <input type="text" class="form-control" id="branchName" name="branchName" required>
+                            </div>
+
+                            <!-- City -->
+                            <div class="form-group">
+                                <label for="city">City:</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="form-group">
+                                <label for="address">Address:</label>
+                                <input type="text" class="form-control" id="address" name="address" required>
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div class="form-group">
+                                <label for="phoneNumber">Phone Number:</label>
+                                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" required>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+
+                            <!-- Start Time -->
+                            <div class="form-group">
+                                <label for="startTime">Start Time:</label>
+                                <input type="time" class="form-control" id="startTime" name="startTime" required>
+                            </div>
+
+                            <!-- End Time -->
+                            <div class="form-group">
+                                <label for="endTime">End Time:</label>
+                                <input type="time" class="form-control" id="endTime" name="endTime" required>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save Branch</button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-9">
+            <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true"
+                class="scrollspy-example" tabindex="0">
+                {% for branch in branches %}
+                <div id="branch_{{ branch.branchID }}" class="mb-1 pb-1">
+                    <div class="branchName">
+                        <h1>{{ branch.city }} {{ branch.branchName }}</h1>
+                    </div>
+
+                    <div class="borderr mb-4 px-3">
+                        <h2>Basic information</h2>
+                        <hr>
+                        <div class="row">
+                            <div class="col-6">
+                                <p class="m-0">City: {{ branch.city }}</p>
+                                <p class="m-0">Phone: {{ branch.phoneNumber }}</p>
+                            </div>
+                            <div class="col-6">
+                                <p class="m-0">Address: {{ branch.address }}</p>
+                                <p class="m-0">Email: {{ branch.email }}</p>
+                            </div>
+                        </div>
+                        <h5 class="my-2">Branch Manager</h5>
+                        <p class="m-0">ManagerID: {{branch.branchAdminInfo.branchAdminID}}</p>
+                        <p class="m-0">Name: {{branch.branchAdminInfo.firstName}} {{branch.branchAdminInfo.lastName}}
+                        </p>
+                        <p class="m-0">Phone: {{branch.branchAdminInfo.phoneNumber}}</p>
+
+                        <div>
+                            <!-- Display details -->
+
+                            <button type="button" class="btn btn-warning px-4 my-2" data-bs-toggle="modal"
+                                data-bs-target="#detailBranch_{{branch.branchID}}">Details</button>
+
+                            <div class="modal fade modal-dialog-scrollable" id="detailBranch_{{branch.branchID}}"
+                                tabindex="-1" aria-labelledby="{{branch.branchID}}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5">Branch Details</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+
+                                            <ul class="nav nav-tabs" id="branchTabs" role="tablist">
+                                                <li class="nav-item" role="presentation">
+                                                    <a class="nav-link active" id="specialProducts-tab"
+                                                        data-bs-toggle="tab" href="#specialProducts{{branch.branchID}}" role="tab"
+                                                        aria-controls="specialProducts" aria-selected="true">Special
+                                                        Products</a>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <a class="nav-link" id="promotionPlans-tab" data-bs-toggle="tab"
+                                                        href="#promotionPlans{{branch.branchID}}" role="tab" aria-controls="promotionPlans"
+                                                        aria-selected="false">Promotion Plans</a>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <a class="nav-link" id="businessStats-tab" data-bs-toggle="tab"
+                                                        href="#businessStats{{branch.branchID}}" role="tab" aria-controls="businessStats"
+                                                        aria-selected="false">Business Overview</a>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <a class="nav-link" id="30days-tab" data-bs-toggle="tab"
+                                                        href="#30days{{branch.branchID}}" role="tab" aria-controls="businessStats"
+                                                        aria-selected="false">Sales in 30 days</a>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <a class="nav-link" id="topProduct-tab" data-bs-toggle="tab"
+                                                        href="#topProduct{{branch.branchID}}" role="tab" aria-controls="topProduct"
+                                                        aria-selected="false">Top products in 30 days</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content" id="branchTabsContent">
+                                                <div class="tab-pane fade show active" id="specialProducts{{branch.branchID}}"
+                                                    role="tabpanel" aria-labelledby="specialProducts-tab{{branch.branchID}}">
+                                                    <div class="borderr mb-4 px-3">
+                                                        <h2>Special Products</h2>
+                                                        <hr>
+                                                        <h5>Pizza</h5>
+                                                        {% set lastPizzaName = namespace(found="") %}
+                                                        {% for i in branch.specialty_pizzas %}
+                                                        {% if i.pizzaName != lastPizzaName.found %}
+                                                        <p class="m-0">{{i.pizzaName}}</p>
+                                                        {% set lastPizzaName.found = i.pizzaName %}
+                                                        {%endif%}
+                                                        {% endfor %}
+                                                        <br />
+
+                                                        <h5>Sides</h5>
+                                                        {% for i in branch.specialty_sides %}
+                                                        <p class="m-0">{{i.offeringName}}</p>
+                                                        {% endfor %}
+                                                        <br />
+
+                                                        <h5>Drink</h5>
+                                                        {% if branch.specialty_drinks %}
+                                                        {% for i in branch.specialty_drinks %}
+                                                        <p class="m-0">{{i.drinkName}}</p>
+                                                        {% endfor %}
+                                                        {%else%}
+                                                        <p class="m-0">N/A</p>
+                                                        {%endif%}
+                                                        <br />
+
+                                                    </div>
+                                                </div>
+                                                <div class="tab-pane fade" id="promotionPlans{{branch.branchID}}" role="tabpanel"
+                                                    aria-labelledby="promotionPlans-tab{{branch.branchID}}">
+
+                                                    <div class="borderr mb-4 px-3">
+                                                        <h2>Promotion Plans</h2>
+                                                        <hr>
+                                                        <h5>Simple Promotions</h5>
+                                                        {% if branch.simplePromo %}
+                                                        {% for i in branch.simplePromo %}
+                                                        <p class="m-0">promoID: {{i.promoID}} {{i.promoType}}</p>
+                                                        <p class="m-0">From {{i.startDate}} to {{i.endDate}}</p>
+                                                        <p class="m-0">{{i.description}}</p>
+                                                        {% endfor %}
+                                                        {%else%}
+                                                        <p>N/A</p>
+                                                        {%endif%}
+
+                                                        <h5>Combo Promotions</h5>
+                                                        {% if branch.comboPromo %}
+                                                        {% for i in branch.comboPromo %}
+                                                        <p class="m-0">promoID: {{i.promoID}} {{i.promoType}}</p>
+                                                        <p class="m-0">From {{i.startDate}} to {{i.endDate}}</p>
+                                                        <p class="m-0">{{i.description}}</p>
+                                                        {% endfor %}
+                                                        {%else%}
+                                                        <p>N/A</p>
+                                                        {%endif%}
+                                                    </div>
+                                                </div>
+                                                <div class="tab-pane fade" id="businessStats{{branch.branchID}}" role="tabpanel"
+                                                    aria-labelledby="businessStats-tab{{branch.branchID}}">
+
+                                                    <div class="borderr mb-4 px-3">
+                                                        <h2>Business Overview</h2>
+                                                        <p class="m-0">(Since opening)</p>
+                                                        <hr>
+                                                        <p class="m-0">Revenue: ${{branch.totalAmounts}}</p>
+                                                        <p class="m-0">Orders: {{branch.orderAmounts}}</p>
+                                                        <p class="m-0">Customers: {{branch.totalCustomer}}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="tab-pane fade" id="30days{{branch.branchID}}" role="tabpanel"
+                                                    aria-labelledby="business30days{{branch.branchID}}">
+
+                                                    <div class="borderr">
+                                                        <table class="table table-striped table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Date</th>
+                                                                    <th>Total Amount</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for order in branch.orders30Days %}
+                                                                    <tr>
+                                                                        <td>{{ order['orderDate'] }}</td>
+                                                                        <td>${{ order['totalAmount'] }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div class="tab-pane fade" id="topProduct{{branch.branchID}}" role="tabpanel"
+                                                    aria-labelledby="topProduct{{branch.branchID}}">
+
+                                                    <div class="borderr">
+                                                        <table class="table table-striped table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Product</th>
+                                                                    <th>Purchased (time)</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for p in branch.topProducts %}
+                                                                    <tr>
+                                                                        <td>{{ p.productID }}</td>
+                                                                        <td>{{ p.count }}</td>
+                                                                        
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

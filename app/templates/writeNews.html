@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Write News{% endblock %}
+
+{% block content %}
+<div class="container-fluid pt-3">
+    <div class="container">
+        <div>
+            <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{url_for('adminDashboardFunc.adminDashboard')}}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Write News</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+    
+<div class="container mt-5">
+    <h2 class="mb-4">Write News</h2>
+    <form action="{{ url_for('someFunctions.submitNews') }}" method="post">
+        <div class="mb-3">
+            <label for="title" class="form-label">News Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">News Content</label>
+            <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit News</button>
+    </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,711 @@
+{% extends "base.html" %}
+
+{% block title %}National Products{% endblock %}
+
+{% block content %}
+<style>
+    .product-card-btns {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .product-card-btn {
+        width: 45%;
+    }
+
+    .card-img-top {
+        object-fit: cover;
+        max-height: 150px;
+    }
+</style>
+
+<div class="container mt-3">
+    <h1>Manage National Products</h1>
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs mt-3 mb-3" style="font-size: 18px; font-weight: bold;" id="myTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="display-tab" data-toggle="tab" href="#display" role="tab"
+                aria-controls="display" aria-selected="true">Display Pizzas</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="edit-tab" data-toggle="tab" href="#edit" role="tab" aria-controls="edit"
+                aria-selected="false">Edit Pizzas</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="sides-tab" data-toggle="tab" href="#sides" role="tab" aria-controls="sides"
+                aria-selected="false">SideOfferings</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="drinks-tab" data-toggle="tab" href="#drinks" role="tab" aria-controls="drinks"
+                aria-selected="false">Drinks</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="toppings-tab" data-toggle="tab" href="#toppings" role="tab" aria-controls="toppings"
+                aria-selected="false">Toppings</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+
+        <!-- pizza display tab -->
+        <div class="tab-pane fade show active" id="display" role="tabpanel" aria-labelledby="display-tab">
+            <div class="col-md-12 text-md-end">
+                <button class="btn btn-success mt-3 mb-4" data-bs-toggle="modal" data-bs-target="#addPizzaModal">Add
+                    Pizza</button>
+            </div>
+            <div class="row">
+                {% for pizza_group in pizzas %}
+                <div data-available-sizes="{{ pizza_group|map(attribute='size')|join(',') }}"
+                    class="col-md-3 col-sm-4 mb-4">
+                    <div class="card" style="width: 19rem;">
+                        <img src="{{ url_for('static', filename='image/' + pizza_group[0]['pizzaID']|string + '.jpg') }}"
+                            class="card-img-top" alt="Pizza Image">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ pizza_group[0].pizzaName }}</h5>
+                            <p class="card-text">{{ pizza_group[0].description }}</p>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for pizza in pizza_group %}
+                            <li class="list-group-item">
+                                PizzaID: {{ pizza.pizzaID }},
+                                {{ pizza.size }},
+                                ${{ pizza.price }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- pizza edit tab -->
+        <div class="tab-pane fade" id="edit" role="tabpanel" aria-labelledby="edit-tab">
+            <div class="row">
+                <div class="col-md-12 text-md-end">
+                    <button id="deleteSelectedBtn" class="btn btn-secondary mt-3 mb-4" disabled>Delete Selected</button>
+                </div>
+                <div class="mb-5">
+                    {% for pizza_group in pizzas %}
+                    <table class="table table-bordered mb-5">
+                        <thead>
+                            <tr>
+                                <th rowspan="4" style="vertical-align: middle;"><img
+                                        src="{{ url_for('static', filename='image/' + pizza_group[0]['pizzaID']|string + '.jpg') }}"
+                                        alt="Pizza Image" style="width:100%; height: auto;"></th>
+                                <th colspan="3"><strong>{{ pizza_group[0].pizzaName }}</strong></th>
+                                <th rowspan="4" style="vertical-align: middle;">
+                                    <button class="btn btn-success btn-sm editMain" data-bs-toggle="modal"
+                                        data-toggle="tooltip" title="Edit image, name, description."
+                                        data-bs-target="#editPizzaModal" data-id="{{ pizza_group[0].pizzaID }}"
+                                        data-name="{{ pizza_group[0].pizzaName }}"
+                                        data-description="Description: {{ pizza_group[0].description }}">
+                                        Edit
+                                    </button>
+                                </th>
+                                <th rowspan="4" style="vertical-align: middle;">
+                                    <input type="checkbox" class="selectPizzaGroup"
+                                        data-pizza-name="{{ pizza_group[0].pizzaName }}" name="selectPizzaGroupBtn"
+                                        data-toggle="tooltip" title="Select to delete this pizza">
+                                </th>
+                            </tr>
+                            <tr>
+                                <td colspan="3">Description: {{ pizza_group[0].description }}</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>PIZZA ID</th>
+                                <th>SIZE</th>
+                                <th>PRICE</th>
+                                <th>PREP TIME</th>
+                                <th>EDIT</th>
+                                <th>DELETE</th>
+                            </tr>
+                            {% for pizza in pizza_group %}
+                            <tr>
+                                <td style="width: 240px;">{{ pizza.pizzaID }}</td>
+                                <td>{{ pizza.size }}</td>
+                                <td>${{ pizza.price }}</td>
+                                <td>{{ pizza.preparetime }} mins</td>
+                                <td style="width: 80px;">
+                                    <button class="btn btn-success btn-sm editSize" data-bs-toggle="modal"
+                                        data-bs-target="#editSizeModal" data-id="{{ pizza.pizzaID }}"
+                                        data-size="{{ pizza.size }}" data-price="{{ pizza.price}}"
+                                        data-preparetime="{{ pizza.preparetime}}" data-toggle="tooltip"
+                                        title="Edit price and preparetime">
+                                        Edit
+                                    </button>
+                                </td>
+                                <td style="width: 80px;">
+                                    <input type="checkbox" class="selectPizza"
+                                        data-pizza-name="{{ pizza_group[0].pizzaName }}"
+                                        data-pizza-id="{{ pizza.pizzaID }}" name="selectPizzaBtn" data-toggle="tooltip"
+                                        title="Select to delete this size.">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- sides tab -->
+        <div class="tab-pane fade" id="sides" role="tabpanel" aria-labelledby="sides-tab">
+            <!-- Side Offerings Section -->
+            <div class="row">
+                <div class="col-md-6">
+                    <h1 class="mt-3 mb-4">Side Offerings</h1>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success mt-3 mb-4" data-bs-toggle="modal" data-bs-target="#addSideofferingModal">Add
+                        SideOffering</button>
+                </div>
+            </div>
+            <div class="row">
+                {% for offering in side_offerings %}
+                <div class="col-md-3 col-sm-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <!-- Displaying product image -->
+                            <img src="{{ url_for('static', filename='image/' + offering['sideOfferingID']|string + '.jpg') }}"
+                                alt="SideOffering Image" class="card-img-top">
+                            <!-- Offering details -->
+                            <h5 class="card-title">{{ offering.offeringName }}</h5>
+                            <p class="card-text">{{ offering.description }}</p>
+                            <!-- Price details -->
+                            <p class="card-text">Price: ${{ offering.price }}</p>
+                            <!-- preparetime details -->
+                            <p class="card-text">Prepare time: {{ offering.preparetime }} mins</p>
+                            <!-- Edit and Delete buttons -->
+                            <div class="product-card-btns">
+                                <a href="#" class="btn btn-primary product-card-btn editButtonSO" data-bs-toggle="modal"
+                                    data-bs-target="#editSideOfferingModal" data-id="{{ offering.sideOfferingID }}"
+                                    data-name="{{ offering.offeringName }}" data-description="{{ offering.description }}"
+                                    data-price="{{ offering.price }}" data-preparetime="{{ offering.preparetime }}">Edit</a>
+                                <a href="#" class="btn btn-danger product-card-btn deleteButtonSO"
+                                    data-id="{{ offering.sideOfferingID }}">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- drinks tab -->
+        <div class="tab-pane fade" id="drinks" role="tabpanel" aria-labelledby="drinks-tab">
+            <!-- Drinks Section -->
+            <div class="row">
+                <div class="col-md-6">
+                    <h1 class="mt-3 mb-4">Drinks</h1>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success mt-3 mb-4" data-bs-toggle="modal" data-bs-target="#addDrinkModal">Add
+                        Drink</button>
+                </div>
+            </div>
+            <div class="row">
+                {% for drink in drinks %}
+                <div class="col-md-2 col-sm-3 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <!-- Displaying product image -->
+                            <img src="{{ url_for('static', filename='image/' + drink['drinkID']|string + '.jpg') }}"
+                                alt="Drink Image" class="card-img-top">
+
+                            <!-- Drink details -->
+                            <h5 class="card-title">{{ drink.drinkName }}</h5>
+                            <p class="card-text">{{ drink.description }}</p>
+
+                            <!-- Price details -->
+                            <p class="card-text">Price: ${{ drink.price }}</p>
+
+                            <!-- Edit and Delete buttons -->
+                            <div class="product-card-btns">
+                                <a href="#" class="btn btn-primary product-card-btn editButtonDrink"
+                                    data-id="{{ drink.drinkID }}" data-name="{{ drink.drinkName }}"
+                                    data-description="{{ drink.description }}" data-price="{{ drink.price }}"
+                                    data-preparetime="{{ drink.preparetime }}">Edit</a>
+                                <a href="#" class="btn btn-danger product-card-btn deleteButtonDrink"
+                                    data-id="{{ drink.drinkID }}" style="font-size: 14px;">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- toppings tab -->
+        <div class="tab-pane fade" id="toppings" role="tabpanel" aria-labelledby="toppings-tab">
+            <!-- Topping Section -->
+            <div class="row">
+                <div class="col-md-6">
+                    <h1 class="mt-3 mb-4">Toppings</h1>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success mt-3 mb-4" data-bs-toggle="modal" data-bs-target="#addToppingModal">Add
+                        Topping</button>
+                </div>
+            </div>
+            <div class="row">
+                {% for topping in toppings %}
+                <div class="col-md-2 col-sm-3 mb-1" id="topping-{{ topping['toppingID'] }}">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <!-- Displaying product image -->
+                            <img src="{{ url_for('static', filename='image/' + topping['toppingID']|string + '.jpg') }}"
+                                alt="topping Image" class="card-img-top">
+
+                            <!-- Topping details -->
+                            <h5 class="card-title">{{ topping.toppingName }}</h5>
+                            <p class="card-text">{{ topping.description }}</p>
+
+                            <!-- Price details -->
+                            <p class="card-text">Price: ${{ topping.price }}</p>
+
+                            <!-- Edit and Delete buttons -->
+                            <div class="product-card-btns">
+                                <a href="#" class="btn btn-primary product-card-btn editButtonTopping"
+                                    data-id="{{ topping.toppingID }}" data-name="{{ topping.toppingName }}"
+                                    data-description="{{ topping.description }}" data-price="{{ topping.price }}">Edit</a>
+                                <a href="#" class="btn btn-danger product-card-btn deleteButtonTopping"
+                                    data-id="{{ topping.toppingID }}" style="font-size: 14px;">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Pizza Modal -->
+    <div class="modal fade" id="editPizzaModal" tabindex="-1" role="dialog" aria-labelledby="editPizzaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPizzaModalLabel">Edit Pizza</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('adminDashboard1.editPizzaMain') }}" method="POST"
+                    enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <input type="hidden" name="pizzaId" id="editPizzaId">
+                        <input type="hidden" name="pizzaOriginalName" id="pizzaOriginalName">
+                        <div class="mb-3">
+                            <label for="pizzaImage" class="form-label">Pizza Image</label>
+                            <input type="file" class="form-control" id="pizzaImage" name="pizzaImage">
+                        </div>
+                        <div class="mb-3">
+                            <label for="pizzaName" class="form-label">Pizza Name</label>
+                            <input type="text" class="form-control" id="pizzaName" name="pizzaName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pizzaDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="pizzaDescription" name="description" rows="3"
+                                required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Pizza Info</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Edit Pizza Size Modal -->
+    <div class="modal fade" id="editSizeModal" tabindex="-1" role="dialog" aria-labelledby="editSizeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editSizeModalLabel">Edit Pizza Size</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editSizeForm" action="{{ url_for('adminDashboard1.editPizzaSize') }}" method="POST"
+                    enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="pizzaID" class="form-label">Pizza ID</label>
+                            <input type="text" class="form-control" id="pizzaID" name="pizzaID" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pizzaSize" class="form-label">Size</label>
+                            <input type="text" class="form-control" id="pizzaSize" name="size" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pizzaSizePrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="pizzaSizePrice" name="price"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pizzaSizePrepTime" class="form-label">Preparation Time (in mins)</label>
+                            <input type="number" class="form-control" id="pizzaSizePrepTime" name="preparetime"
+                                required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Add Pizza Modal -->
+    <div class="modal fade" id="addPizzaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form action="/addPizza" method="post" enctype="multipart/form-data">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Pizza</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Pizza Image -->
+                        <div class="mb-3">
+                            <label for="pizzaImage" class="form-label">Pizza Image</label>
+                            <input type="file" class="form-control" id="pizzaImage" name="pizzaImage" accept=".jpg"
+                                required>
+                        </div>
+
+                        <!-- Pizza Name -->
+                        <div class="mb-3">
+                            <label for="pizzaName" class="form-label">Pizza Name</label>
+                            <input type="text" class="form-control" id="pizzaName" name="pizzaName" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                required></textarea>
+                        </div>
+
+                        <!-- Prices & Prepare Time -->
+                        <h6>Small Pizza</h6>
+                        <div class="mb-3">
+                            <label for="smallPrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="smallPrice" name="smallPrice"
+                                required>
+                            <label for="smallPrepareTime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="smallPrepareTime" name="smallPrepareTime"
+                                required>
+                        </div>
+
+                        <h6>Medium Pizza</h6>
+                        <div class="mb-3">
+                            <label for="mediumPrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="mediumPrice" name="mediumPrice"
+                                required>
+                            <label for="mediumPrepareTime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="mediumPrepareTime" name="mediumPrepareTime"
+                                required>
+                        </div>
+
+                        <h6>Large Pizza</h6>
+                        <div class="mb-3">
+                            <label for="largePrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="largePrice" name="largePrice"
+                                required>
+                            <label for="largePrepareTime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="largePrepareTime" name="largePrepareTime"
+                                required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Pizza</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Add SideOffering Modal -->
+    <div class="modal fade" id="addSideofferingModal" tabindex="-1" aria-labelledby="addSideofferingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSideofferingModalLabel">Add Side Offering</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('adminDashboard1.addSideOffering') }}" method="POST"
+                    enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Product Image</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="offeringName" class="form-label">Offering Name</label>
+                            <input type="text" class="form-control" id="offeringName" name="offeringName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="preparetime" class="form-label">Prepare Time (in minutes)</label>
+                            <input type="number" class="form-control" id="preparetime" name="preparetime" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Offering</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Edit SideOffering Modal -->
+    <div class="modal fade" id="editSideOfferingModal" tabindex="-1" aria-labelledby="editSideOfferingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editSideOfferingModalLabel">Edit Side Offering</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('adminDashboard1.editSideOffering') }}" method="POST"
+                    enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <input type="hidden" name="sideOfferingId" id="editSideOfferingId">
+                        <div class="mb-3">
+                            <label for="editImage" class="form-label">Product Image</label>
+                            <input type="file" class="form-control" id="editImage" name="editImage" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editOfferingName" class="form-label">Offering Name</label>
+                            <input type="text" class="form-control" id="editOfferingName" name="editOfferingName"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" name="editDescription"
+                                required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="editPrice" name="editPrice"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPrepareTime" class="form-label">Prepare Time (in minutes)</label>
+                            <input type="number" class="form-control" id="editPrepareTime" name="editPrepareTime"
+                                required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Offering</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Add Drink Modal -->
+    <div class="modal fade" id="addDrinkModal" tabindex="-1" aria-labelledby="addDrinkModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDrinkModalLabel">Add New Drink</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/addDrink" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="drinkImage" class="form-label">Drink Image</label>
+                            <input type="file" class="form-control" id="drinkImage" name="drinkImage" accept=".jpg"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="drinkName" class="form-label">Drink Name</label>
+                            <input type="text" class="form-control" id="drinkName" name="drinkName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="preparetime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="preparetime" name="preparetime" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Drink</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Edit Drink Modal -->
+    <div class="modal fade" id="editDrinkModal" tabindex="-1" aria-labelledby="editDrinkModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editDrinkModalLabel">Edit Drink</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/editDrink" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <!-- Hidden input for ID -->
+                        <input type="hidden" id="editDrinkId" name="drinkId">
+                        <div class="mb-3">
+                            <label for="editDrinkImage" class="form-label">Upload New Image</label>
+                            <input type="file" class="form-control" id="editDrinkImage" name="drinkImage" accept=".jpg">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDrinkName" class="form-label">Drink Name</label>
+                            <input type="text" class="form-control" id="editDrinkName" name="drinkName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDrinkDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDrinkDescription" name="description" rows="3"
+                                required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDrinkPrice" class="form-label">Price ($)</label>
+                            <input type="number" step="0.01" class="form-control" id="editDrinkPrice" name="price"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDrinkPrepareTime" class="form-label">Prepare Time (minutes)</label>
+                            <input type="number" class="form-control" id="editDrinkPrepareTime" name="preparetime"
+                                required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Add Topping Modal -->
+    <div class="modal fade" id="addToppingModal" tabindex="-1" aria-labelledby="addToppingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addToppingModalLabel">Add Topping</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('adminDashboard1.addTopping') }}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="toppingImage" class="form-label">Topping Image</label>
+                            <input type="file" class="form-control" id="toppingImage" name="toppingImage"
+                                accept="image/*" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="toppingName" class="form-label">Topping Name</label>
+                            <input type="text" class="form-control" id="toppingName" name="toppingName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="toppingDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="toppingDescription" name="toppingDescription"
+                                required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="toppingPrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="toppingPrice" name="toppingPrice"
+                                required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Topping</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Edit Topping Modal -->
+    <div class="modal fade" id="editToppingModal" tabindex="-1" aria-labelledby="editToppingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editToppingModalLabel">Edit Topping</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editToppingForm" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <input type="hidden" id="editToppingId" name="toppingId">
+
+                        <div class="mb-3">
+                            <label for="editToppingImage" class="form-label">Topping Image</label>
+                            <input type="file" class="form-control" id="editToppingImage" name="toppingImage"
+                                accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editToppingName" class="form-label">Topping Name</label>
+                            <input type="text" class="form-control" id="editToppingName" name="toppingName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editToppingDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editToppingDescription" name="description"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editToppingPrice" class="form-label">Price</label>
+                            <input type="number" step="0.01" class="form-control" id="editToppingPrice" name="price">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Topping</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='scripts/nprod.js') }}"></script>
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment List{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid pt-3">
+  <div class="container">
+    <div>
+      <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item"><a href="{{url_for('adminDashboardFunc.adminDashboard')}}">Dashboard</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Payments Report</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <h2 class="my-4">Payments Report</h2>
+  <div class="mb-3">
+    <form method="POST">
+      <label for="customerFilter">Customer:</label>
+      <select id="customerFilter" name="customerFilter">
+        <option value="">All members</option>
+        {% for member in member_list %}
+        <option value="{{member['userID']}}">{{member['userID']}} {{member['firstName']}} {{member['lastName']}}</option>
+        {% endfor %}
+      </select>
+    
+      <label for="paymentTypeFilter" class="mx-4">Payment Type:</label>
+      <select id="paymentTypeFilter" name="paymentTypeFilter">
+        <option value="">All Type</option>
+        <option value="1">Subscription</option>
+        <option value="2">Swimming Class</option>        
+      </select>
+    
+      <input type="submit" class="ms-4" value="Submit">
+    </form>
+  </div>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>Customer ID</th>
+        <th>Customer Name</th>
+        <th>Payment Type</th>
+        <th>Amount</th>
+        <th>Payment Time</th>
+        <th>In Subscription</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in payments %}
+      <tr>
+        <td>{{ payment.userID }}</td>
+        <td>
+          <button type="button" class="btn btn-link" data-bs-toggle="modal"
+            data-bs-target="#userModal{{ payment.userID }}">
+            {{ payment.firstName }} {{ payment.lastName }}
+          </button>
+        </td>
+        <td>
+          {% if payment.paymentType == 1 %}
+          Subscription Payment
+          {% elif payment.paymentType == 2 %}
+          Individual Class Payment
+          {% endif %}
+        </td>
+        
+        <td>{{ payment.amount }}</td>
+        <td>{{ payment.paymentTime }}</td>
+        <td>
+          {% if payment.endDate < currentDate %}No
+          {% else %}Yes
+          {% endif %}
+      </td>
+      </tr>
+      
+      {% endfor %}
+    </tbody>
+  </table>
+  <hr>
+  <div class="me-5 float-end">
+    <p class="fs-5 fw-bold">Total Payment: {{ totalAmount }}</p>
+  </div>  
+</div>
+
+{% for payment in payments %}
+<div class="modal fade" id="userModal{{ payment.userID }}" tabindex="-1"
+  aria-labelledby="userModalLabel{{ payment.userID }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userModalLabel{{ payment.userID }}">Customer Information</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-4">
+          <p class="text-body-secondary mb-1">
+            <strong><small>AVATAR</small></strong>
+          </p>
+          <img src="{{ url_for('static', filename='uploadAvatar/' + payment['userID']|string + '.jpg') }}" alt="mdo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;" class="rounded-circle" onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/avatar.png')}}';">
+        </div>
+        <div class="mb-4">
+          <p class="text-body-secondary mb-1">
+            <strong><small>TITLE</small></strong>
+          </p>
+          <p class="display-6" style="font-size:18px;">{{ payment['title'] }}</p>
+        </div>
+        <div class="mb-4">
+          <p class="text-body-secondary mb-1">
+            <strong><small>FIRST NAME</small></strong>
+          </p>
+          <p class="display-6" style="font-size:18px;">{{ payment['firstName'] }}</p>
+        </div>
+        <div class="mb-4">
+          <p class="text-body-secondary mb-1">
+            <strong><small>LAST NAME</small></strong>
+          </p>
+          <p class="display-6" style="font-size:18px;">{{ payment['lastName'] }}</p>
+        </div>
+        <div class="mb-4">
+          <p class="text-body-secondary mb-1">
+            <strong><small>SUBSCRIPTION</small></strong>
+          </p>
+          <p class="display-6" style="font-size:18px;">From {{ payment['startDate'] }} to {{ payment['endDate'] }}</p>
+        </div>        
+
+        <div class="mb-4">
+          <p class="text-body-secondary mb-1">
+            <strong><small>PHONE NUMBER</small></strong>
+          </p>
+          <p class="display-6" style="font-size:18px;">{{ payment['phoneNumber'] }}</p>
+        </div>
+
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    {% if category == 'error' %}
+    <div class="py-1 flash-messages alert alert-danger text-center mb-0" role="alert">
+    {% elif category == 'success'%}
+    <div class="py-1 flash-messages alert alert-success text-center mb-0" role="alert">
+    {% endif %}
+        {{ message }}
+    </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="container-fluid pt-3">
+    {% if session['role'] == 1%}
+    <div class="container container-sm">
+    {% else %}
+    <div class="container col-lg-10">
+    {% endif %}
+        <div>
+            <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item">
+                    {% if session['role'] == 1 %}
+                    <a href="/">
+                    {% elif session['role'] == 2 %}
+                    <a href="/">
+                    {% elif session['role'] == 3 %}
+                    <a href="/">
+                    {% endif %}
+                    Dashboard</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Profile</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="row d-flex justify-content-center">
+            <div class="col-11 col-md-10 col-lg-9 col-xl-8 col-xxl-7 mt-3">
+                <div class="d-flex justify-content-center">
+                    <h1 class="display-6 ms-1 mt-2">Account information</h1>
+                </div>
+                <div class="mt-3">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">
+                                <strong><small class="text-body-secondary"></small>Profile</small></strong>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="username-password-tab" data-bs-toggle="tab" data-bs-target="#username-password" type="button" role="tab" aria-controls="username-password" aria-selected="true">
+                                <strong><small class="text-body-secondary">Username/password</small></strong>
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content p-3">
+
+                        <div class="tab-pane fade show active mt-0 px-2" id="profile" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+
+                            {% if session['role'] == account['userRole'] %}
+                            <!-- edit profile -->
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn border-0 py-0 my-0 text-primary" style="height:24px;" data-bs-toggle="modal" data-bs-target="#edit_{{account['userID']}}_profile">
+                                    <p>Edit</p>
+                                </button>
+                            </div>
+
+                            <div class="modal fade" id="edit_{{account['userID']}}_profile" tabindex="-1" aria-labelledby="edit_profile" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-scrollable">
+                                    <div class="modal-content">
+
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="edit_profile">Edit Profile</h2>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <form action="{{ url_for('customerDashboard.updateProfile')}}" method = "POST" enctype="multipart/form-data" class="needs-validation form-feedback" id="edit-profile" novalidate>
+
+                                                <div class="row g-3">
+                                                    <input type="hidden" name="userId" value="{{account['userID']}}" readonly>
+                                                    <input type="hidden" name="userName" value="{{account['userName']}}" readonly>
+                                                    <input type="hidden" name="userPassword" value="{{account['userPassword']}}" readonly>
+
+                                                    <!-- <div class="col-sm-8">
+                                                        <label for="avatar" class="form-label">Avatar</label>                                                        
+                                                        <input type="file" name="avatar" class="form-control" id="avatar" accept="image/jpeg">                                                        
+                                                    </div>                                                    
+                                                    <div class="col-sm-4">                                                        
+                                                        <img src="{{ url_for('static', filename='uploadAvatar/' + account['userID']|string + '.jpg') }}" alt="mdo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;" class="rounded-circle" onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/avatar.png')}}';">
+                                                    </div> -->
+
+                                                    <div class="col-sm-6">
+                                                        <label for="title" class="form-label">Title</label>
+                                                        <select class="form-select col-sm-6" name="title" aria-label="selectTitle">
+                                                            <option value="Mr" {% if account['title'] == 'Mr' %} selected {% endif %}>Mr</option>
+                                                            <option value="Mrs" {% if account['title'] == 'Mrs' %} selected {% endif %}>Mrs</option>
+                                                            <option value="Miss" {% if account['title'] == 'Miss' %} selected {% endif %}>Miss</option>
+                                                            <option value="Ms" {% if account['title'] == 'Ms' %} selected {% endif %}>Ms</option>
+                                                            <option value="Dr" {% if account['title'] == 'Dr' %} selected {% endif %}>Dr</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-sm-6">
+                                                        <label for="firstName" class="form-label">First Name</label>
+                                                        <input type="text" name="firstName" class="form-control" id="firstName" value="{{account['firstName']}}">
+                                                    </div>
+                                                
+                                                    <div class="col-sm-6">
+                                                        <label for="lastName" class="form-label">Last Name</label>
+                                                        <input type="text" name="lastName" class="form-control" id="lastName" value="{{account['lastName']}}">
+                                                    </div>
+
+                                                    <div class="col-sm-6">
+                                                        <label for="phoneNumber" class="form-label">Phone number</label>
+                                                        <input type="text" name="phoneNumber" class="form-control" id="phoneNumber" value="{{account['phoneNumber']}}">
+                                                    </div>
+                                                
+                                                    <div class="col-sm-6">
+                                                        <label for="email" class="form-label">Email</label>
+                                                        <input type="text" name="email" class="form-control" id="email" value="{{account['email']}}" required>
+                                                        <div class="invalid-feedback email-empty-feedback">
+                                                            Email addrss is required.
+                                                        </div>
+                                                        <div class="invalid-feedback email-invalid-format-feedback">
+                                                            Invalid email address.
+                                                        </div>
+                                                        <div class="valid-feedback email-valid-feedback">
+                                                            Looks good!
+                                                        </div>
+                                                    </div>
+                                                    {% if account['userRole'] == 'Customer' %}
+                                                    <div class="col-sm-6">
+                                                        <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                                                        <input type="date" name="dateOfBirth" class="form-control" id="dateOfBirth" value="{{account['dateOfBirth']}}">
+                                                    </div>
+                                                    
+                                                    <div class="col-sm-12">
+                                                        <label for="Address" class="form-label">Address</label>
+                                                        <input type="text" name="Address" class="form-control" id="Address" value="{{account['Address']}}">
+                                                    </div>
+
+                                                    <div class="col-sm-12">
+                                                        <label for="Preferences" class="form-label">Preferences</label>
+                                                        <input type="text" name="Preferences" class="form-control" id="Preferences" value="{{account['Preferences']}}">
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if account['userPermission'] == 2 %}
+                                                    <div class="col-sm-10  mb-4">
+                                                        <label for="introduction" class="form-label">Introduction</label>
+                                                        <input type="text" name="introduction" class="form-control" id="introduction" value="{{account['introduction']}}">
+                                                    </div>
+                                                    {% endif %}
+
+                                                </div>
+
+                                                <div class="modal-footer mt-2">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            
+                                                    <button type="submit" class="btn btn-primary" id="submitButton-edit">Save changes</button>
+                                        
+                                                </div>
+                                            </form>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- finish editing profile -->
+                            {% endif %}
+
+                            <!-- <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>AVATAR</small></strong>
+                                </p>                                
+                                <img src="{{ url_for('static', filename='uploadAvatar/' + account['userID']|string + '.jpg') }}" alt="mdo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;" class="rounded-circle" onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/avatar.png')}}';">
+                            </div> -->
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>TITLE</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['title'] }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>FIRST NAME</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['firstName'] }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>LAST NAME</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['lastName'] }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>EMAIL</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['email'] }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>PHONE NUMBER</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['phoneNumber'] }}</p>
+                            </div>
+                            {% if account['userRole'] == 'Customer' %}
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>ADDRESS</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['Address'] }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>DATE OF BIRTH</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['dateOfBirth'] }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>Preferences</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['Preferences'] }}</p>
+                            </div>
+                            {% endif %}
+                            {% if account['userPermission'] == 2 %}
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>INTRODUCTION</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">{{ account['introduction'] }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="tab-pane fade show mt-0 px-2" id="username-password" role="tabpanel" aria-labelledby="username-password-tab" tabindex="0">
+                            
+                        {% if session['role'] == account['userRole'] %}   
+                            <!-- edit username/password -->
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn border-0 py-0 my-0 text-primary" style="height:24px;" data-bs-toggle="modal" data-bs-target="#edit_{{account['userID']}}_password">
+                                    <p>Edit</p>
+                                </button>
+                            </div>
+
+                            <div class="modal fade" id="edit_{{account['userID']}}_password" tabindex="-1" aria-labelledby="edit_password" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="edit_password">Change username/password</h2>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <form action="{{ url_for('customerDashboard.updateProfile')}}" method = "POST" class="needs-validation form-feedback" id="change-password" novalidate>
+                                                <div class="row g-3">
+                                                    <input type="hidden" name="title" value="{{account['title']}}" readonly>
+                                                    <input type="hidden" name="userId" value="{{account['userID']}}" readonly>
+                                                    <input type="hidden" name="firstName" value="{{account['firstName']}}" readonly>
+                                                    <input type="hidden" name="lastName" value="{{account['lastName']}}" readonly>
+                                                    <input type="hidden" name="email" value="{{account['email']}}" readonly>
+                                                    <input type="hidden" name="phoneNumber" value="{{account['phoneNumber']}}" readonly>
+        
+                                                    {% if session['role'] == 'Customer' %}
+                                                    <input type="hidden" name="Address" value="{{account['Address']}}" readonly>
+                                                    <input type="hidden" name="dateOfBirth" value="{{account['dateOfBirth']}}" readonly>
+                                                    <input type="hidden" name="Preferences" value="{{account['Preferences']}}" readonly>
+                                                    
+                                                    {% endif %}
+                                                    {% if session['role'] == 2 %}
+                                                    <input type="hidden" name="introduction" value="{{account['introduction']}}" readonly>
+                                                    {% endif %}
+
+                                                    <div class="col-sm-8">
+                                                        <label for="username" class="form-label">Username</label>
+                                                        <div class="input-group has-validation">
+                                                            <span class="input-group-text" id="inputGroupPrepend">@</span>
+                                                            <input type="userName" class="form-control" id="userName" name="userName" aria-describedby="inputGroupPrepend"
+                                                                value="{{account['userName']}}" required>
+                                                            <div class="invalid-feedback username-empty-feedback">
+                                                                Username is required.
+                                                            </div>
+                                                            
+                                                            <div class="invalid-feedback username-invalid-format-feedback">
+                                                                Username must contain only letters and numbers.
+                                                            </div>
+                                                            <div class="valid-feedback username-valid-feedback">
+                                                                Looks good!
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-8">
+                                                        <label for="userPassword" class="form-label">New Password</label>
+                                                        <input type="password" name="userPassword" class="form-control" id="userPassword" pattern="^(?=.*[A-Z])(?=.*[a-zA-Z0-9-]).{8,}$" required title="Alphabets and numbers only. Must have one capitalised character. Minimum 8 characters.">
+                                                        <div class="invalid-feedback password-empty-feedback">
+                                                            Password is required.
+                                                        </div> 
+                                                        <div class="invalid-feedback password-invalid-format-feedback">
+                                                            Alphabets and numbers only. Must have one capitalised character. 
+                                                            Minimum 8 characters.
+                                                        </div>
+                                                        <div class="valid-feedback password-valid-feedback">
+                                                            Looks good!
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="col-sm-8">
+                                                        <label for="confirmUserPassword" class="form-label">Confirm Password</label>
+                                                        <input type="password" name="confirmUserPassword" class="form-control" id="confirmUserPassword" required title="Alphabets and numbers only. Must match the above password. Minimum 8 characters.">
+                                                        <div class="invalid-feedback password-mismatch-feedback">
+                                                            Passwords do not match.
+                                                        </div>
+                                                    </div>                                            
+                                                                                                        
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            
+                                                        <button type="submit" class="btn btn-primary submitButton" id="submitButton">Save changes</button>
+                                                
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- finish editing username/password -->
+                        {% endif %} 
+                            
+                            <div class="mb-4">
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>USERNAME</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">@{{ account['userName'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-body-secondary mb-1">
+                                    <strong><small>PASSWORD</small></strong>
+                                </p>
+                                <p class="display-6" style="font-size:18px;">********</p>
+                            </div>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>   
+<script>
+document.getElementById("change-password").addEventListener("submit", function(event) {
+    const password = document.getElementById("userPassword").value;
+    const confirmPassword = document.getElementById("confirmUserPassword").value;
+    
+    const mismatchFeedback = document.querySelector(".password-mismatch-feedback");
+    const passwordFeedback = document.querySelector(".password-invalid-format-feedback");
+    
+    // Check if passwords match
+    if (password !== confirmPassword) {
+        event.preventDefault(); 
+        mismatchFeedback.style.display = "block";
+        return; // Exit function early if passwords don't match
+    } else {
+        mismatchFeedback.style.display = "none";
+    }
+
+    // Validate password format
+    const regex = /^(?=.*[A-Z])(?=.*[a-zA-Z0-9-]).{8,}$/;
+    if (!regex.test(password)) {
+        event.preventDefault(); 
+        passwordFeedback.style.display = "block";
+    } else {
+        passwordFeedback.style.display = "none";
+    }
+});
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    let today = new Date();
+    let maxDate = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate());
+    let formattedDate = maxDate.toISOString().split('T')[0];
+    document.getElementById('dateOfBirth').max = formattedDate;
+});
+</script>
+{% endblock %}
