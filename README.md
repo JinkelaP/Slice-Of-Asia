@@ -4,8 +4,8 @@
 http://haochenzhu2023.pythonanywhere.com/
 
 ## interface
-
-
+Main page
+![Main page](https://github.com/JinkelaP/Slice-Of-Asia/blob/main/readmeImg/main.png)
 
 
 
