@@ -32,35 +32,35 @@ def passwordEncrypt(userPassword):
     bytes = userPassword.encode('utf-8')
     salt = bcrypt.gensalt()
     hashedPsw = bcrypt.hashpw(bytes, salt)
-    return hashedPsw    
-    
+    return hashedPsw
+
 @bp.route('/hqAdmin/home')
 def adminDashboard1():
     if not 'loggedin' in session or session['role'] != 'HQ_Admin':
         return redirect(url_for('login.login'))
-    
+
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    
+
     # Fetch branches from the database
     cursor.execute('SELECT * FROM branches WHERE branchActive = TRUE;')
     branches = cursor.fetchall()
 
 
-    # Fetch additional information for each branch. 
+    # Fetch additional information for each branch.
     for branch in branches:
         cursor.execute('SELECT * FROM pizzas WHERE branchID = %s AND pizzaActive = TRUE', (branch['branchID'],))
         branch['specialty_pizzas'] = cursor.fetchall()
-        
+
         cursor.execute('SELECT * FROM sideOfferings WHERE branchID = %s AND sideOfferingActive = TRUE', (branch['branchID'],))
         branch['specialty_sides'] = cursor.fetchall()
-        
+
         cursor.execute('SELECT * FROM drinks WHERE branchID = %s AND drinkActive = TRUE', (branch['branchID'],))
         branch['specialty_drinks'] = cursor.fetchall()
 
         cursor.execute('SELECT * FROM AdminInfo WHERE userID = %s;', (branch['branchAdminID'],))
         branch['branchAdminInfo'] = cursor.fetchone()
 
-        cursor.execute('SELECT * FROM simplePromotions WHERE branchID = %s AND sPromoActive = TRUE', (branch['branchID'],))
+        cursor.execute('SELECT * FROM simplepromotions WHERE branchID = %s AND sPromoActive = TRUE', (branch['branchID'],))
         branch['simplePromo'] = cursor.fetchall()
 
         cursor.execute('SELECT * FROM comboPromotions WHERE branchID = %s AND cPromoActive = TRUE', (branch['branchID'],))
@@ -102,7 +102,7 @@ def adminDashboard1():
                 cursor.execute("SELECT * FROM drinks WHERE drinkID = %s;", (i['productID'],))
                 productName = cursor.fetchone()
                 i['productID'] = productName['drinkName']
-        
+
         branch['totalAmounts'] = totalAmount
         branch['orderAmounts'] = len(totalAmountOrders)
         branch['totalCustomer'] = customerIDTemp
@@ -115,14 +115,14 @@ def adminDashboard1():
 def reports():
     if not 'loggedin' in session or session['role'] != 'HQ_Admin':
         return redirect(url_for('login.login'))
-    
+
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    
+
     # Fetch info from the database
 
     branch = {}
 
-    cursor.execute('SELECT * FROM simplePromotions WHERE sPromoActive = TRUE')
+    cursor.execute('SELECT * FROM simplepromotions WHERE sPromoActive = TRUE')
     branch['simplePromo'] = cursor.fetchall()
 
     for i in branch['simplePromo']:
@@ -193,7 +193,7 @@ def reports():
             cursor.execute("SELECT * FROM drinks WHERE drinkID = %s;", (i['productID'],))
             productName = cursor.fetchone()
             i['productID'] = productName['drinkName']
-    
+
     branch['totalAmounts'] = totalAmount
     branch['totalOrder'] = totalOrder
     branch['totalCustomer'] = totalCustomer
@@ -201,65 +201,65 @@ def reports():
     branch['topProducts30'] = topProducts30
     branch['topProductsAll'] = topProductsAll
 
-    return render_template('nationalReports.html', nationalInfo=simplejson.dumps(branch, use_decimal=True)) 
+    return render_template('nationalReports.html', nationalInfo=simplejson.dumps(branch, use_decimal=True))
 
 @bp.route('/hqadmin/profile')
-def hqadminProfile():    
+def hqadminProfile():
     if is_authenticated():
-        if session['role'] == 'HQ_Admin':    
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)    
+        if session['role'] == 'HQ_Admin':
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             # Fetch admininfo from the database
             cursor.execute('SELECT users.userID, users.userName, users.userPassword, admininfo.title, admininfo.firstName, admininfo.lastName, admininfo.phoneNumber FROM admininfo JOIN users ON admininfo.userID = users.userID WHERE admininfo.userID = %s',(session['id'],))
-            hqadminInfo = cursor.fetchone()           
+            hqadminInfo = cursor.fetchone()
             return render_template('hqadminProfile.html', hqadminInfo=hqadminInfo)
         else:
             return "unauthorized"
     else:
-        return redirect(url_for('login.login'))    
-    
+        return redirect(url_for('login.login'))
+
 @bp.route('/hqadmin/update_profile', methods=['GET', 'POST'])
 def updateProfile():
     if is_authenticated():
-        userID = request.form.get('userID')        
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)    
+        userID = request.form.get('userID')
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # Fetch admininfo from the database
-        cursor.execute('''SELECT users.userID, users.userName, users.userPassword, admininfo.title, admininfo.firstName, admininfo.lastName, admininfo.phoneNumber 
-                       FROM admininfo JOIN users 
-                       ON admininfo.userID = users.userID 
+        cursor.execute('''SELECT users.userID, users.userName, users.userPassword, admininfo.title, admininfo.firstName, admininfo.lastName, admininfo.phoneNumber
+                       FROM admininfo JOIN users
+                       ON admininfo.userID = users.userID
                        WHERE admininfo.adminActive=True AND admininfo.userID = %s''',(userID,))
-        account = cursor.fetchone()        
-             
+        account = cursor.fetchone()
+
         if account:
             userName = request.form.get('userName')
             title = request.form.get('title')
             firstName = request.form.get('firstName')
             lastName = request.form.get('lastName')
-            phoneNumber = request.form.get('phoneNumber')           
+            phoneNumber = request.form.get('phoneNumber')
             userPassword = request.form.get('userPassword')
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)            
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             #if username is changed:
             if userName != account['userName']:
-                #check if username already exists in database                
+                #check if username already exists in database
                 if userNameCrash(userName):
                     flash('Failed. Username already exists. Please choose a different username.','error')
                     return redirect(url_for('adminDashboard1.hqadminProfile'))
-                else:                    
+                else:
                     cursor.execute('UPDATE users SET userName=%s WHERE userID=%s',(userName, userID))
                     mysql.connection.commit()
                     flash('Username changed successfully!','success')
 
             # check if the password is changed by comparing the input password with the password stored in database
             if userPassword.encode('utf-8') !=  account['userPassword'].encode('utf-8'):
-                if userPassword != "********" and not bcrypt.checkpw(userPassword.encode('utf-8'), account['userPassword'].encode('utf-8')):                    
+                if userPassword != "********" and not bcrypt.checkpw(userPassword.encode('utf-8'), account['userPassword'].encode('utf-8')):
                     # if password is changed, then the new password needs to be encrypted before inserting into databse
                     hashed = passwordEncrypt(userPassword)
                     cursor.execute('UPDATE users SET userPassword=%s WHERE userID=%s',(hashed, userID))
                     mysql.connection.commit()
                     flash('Password changed successfully!','success')
-            
-            if 'avatar' in request.files and request.files['avatar'].filename != '':                
-                avatar = request.files.get('avatar')                
-                avatarName = f"{userID}.jpg"                
+
+            if 'avatar' in request.files and request.files['avatar'].filename != '':
+                avatar = request.files.get('avatar')
+                avatarName = f"{userID}.jpg"
                 filePath = os.path.join('app', 'static', 'avatar', avatarName)
                 avatar.save(filePath)
 
@@ -267,8 +267,8 @@ def updateProfile():
                     cursor.execute('UPDATE admininfo SET firstName=%s,lastName=%s,phoneNumber=%s,title=%s WHERE admininfo.userID = %s', (firstName,lastName,phoneNumber,title,userID,))
                     mysql.connection.commit()
                     flash('Profile information updated successfully!','success')
-                    return redirect(url_for('adminDashboard1.hqadminProfile'))           
-            else:                
+                    return redirect(url_for('adminDashboard1.hqadminProfile'))
+            else:
                 return redirect(url_for('adminDashboard1.hqadminProfile'))
         else:
             return "unauthorized"
@@ -279,7 +279,7 @@ def updateProfile():
 @bp.route('/nationalProducts', methods=['GET'])
 def nationalProducts():
     if 'loggedin' in session and session['role'] == 'HQ_Admin':
-        
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
         # Fetch the pizzas, side offerings, and drinks that are national (branchID is NULL) and active
@@ -320,8 +320,8 @@ def addABranch():
 
             # Insert into the database
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            query = ''' 
-            INSERT INTO branches (branchName, city, address, phoneNumber, email, startTime, endTime) 
+            query = '''
+            INSERT INTO branches (branchName, city, address, phoneNumber, email, startTime, endTime)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             '''
             cursor.execute(query, (branchName, city, address, phoneNumber, email, startTime, endTime))
@@ -341,24 +341,24 @@ def addPizza():
     if 'loggedin' in session and session['role'] == 'HQ_Admin':
         pizzaName = request.form['pizzaName']
         description = request.form['description']
-        
+
         sizes = ['Small', 'Medium', 'Large']
         prices = [request.form['smallPrice'], request.form['mediumPrice'], request.form['largePrice']]
         preparetimes = [request.form['smallPrepareTime'], request.form['mediumPrepareTime'], request.form['largePrepareTime']]
-        
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         for size, price, preparetime in zip(sizes, prices, preparetimes):
             cursor.execute("""
                 INSERT INTO pizzas (pizzaName, description, size, price, preparetime)
                 VALUES (%s, %s, %s, %s, %s)
             """, (pizzaName, description, size, price, preparetime))
-        
+
         if 'pizzaImage' in request.files and request.files['pizzaImage'].filename != '':
             image = request.files.get('pizzaImage')
             # fetch the id of the pizza that was just inserted
             first_pizzaId = cursor.lastrowid
-            
+
             for offset in range(3):
                 pizzaId = first_pizzaId - offset
                 imageName = f"{pizzaId}.jpg"
@@ -371,7 +371,7 @@ def addPizza():
 
         mysql.connection.commit()
         cursor.close()
-        
+
         return redirect(url_for('adminDashboard1.nationalProducts'))
     return redirect(url_for('login.login'))
 
@@ -384,16 +384,16 @@ def editPizzaMain():
         description = request.form['description']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         # Fetch all pizzaIDs that match the original pizza name
         cursor.execute('SELECT pizzaID FROM pizzas WHERE pizzaName = %s', (pizzaOriginalName,))
         all_pizzaIDs = [row['pizzaID'] for row in cursor.fetchall()]
 
         # Update the pizzaName and description for all pizzaIDs that match the original pizza name
         for pizzaID in all_pizzaIDs:
-            cursor.execute('UPDATE pizzas SET pizzaName = %s, description = %s WHERE pizzaID = %s', 
+            cursor.execute('UPDATE pizzas SET pizzaName = %s, description = %s WHERE pizzaID = %s',
                            (pizzaNewName, description, pizzaID))
-            
+
             if 'pizzaImage' in request.files and request.files['pizzaImage'].filename != '':
                 image = request.files.get('pizzaImage')
                 imageName = f"{pizzaID}.jpg"
@@ -402,10 +402,10 @@ def editPizzaMain():
                     f.write(image.read())
                 # reset the file pointer to the beginning of the file
                 image.seek(0)
-        
+
         mysql.connection.commit()
         cursor.close()
-        
+
         return redirect(url_for('adminDashboard1.nationalProducts'))
 
     return redirect(url_for('login.login'))
@@ -421,9 +421,9 @@ def editPizzaSize():
         preparetime = request.form['preparetime']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         cursor.execute('UPDATE pizzas SET price = %s, preparetime = %s WHERE pizzaID = %s', (price, preparetime, pizzaID))
-        
+
         mysql.connection.commit()
         cursor.close()
 
@@ -439,15 +439,15 @@ def deletePizzas():
         pizzaIds = request.json.get('pizzaIds', [])
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         if pizzaNames:  # Check if pizzaNames is not empty
             query_names = "UPDATE pizzas SET pizzaActive = FALSE WHERE pizzaName IN (%s)" % ', '.join(['%s'] * len(pizzaNames))
             cursor.execute(query_names, tuple(pizzaNames))
-        
+
         if pizzaIds:  # Check if pizzaIds is not empty
             query_ids = "UPDATE pizzas SET pizzaActive = FALSE WHERE pizzaID IN (%s)" % ', '.join(['%s'] * len(pizzaIds))
             cursor.execute(query_ids, tuple(pizzaIds))
-        
+
         mysql.connection.commit()
         cursor.close()
 
@@ -470,11 +470,11 @@ def addSideOffering():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('INSERT INTO sideOfferings (offeringName, description, price, preparetime) VALUES (%s, %s, %s, %s)', (offeringName, description, price, preparetime))
         # fetch the id of the side offering that was just inserted
-        sideOfferingId = cursor.lastrowid  
-        
+        sideOfferingId = cursor.lastrowid
+
         if 'image' in request.files and request.files['image'].filename != '':
-            image = request.files.get('image')                
-            imageName = f"{sideOfferingId}.jpg"                
+            image = request.files.get('image')
+            imageName = f"{sideOfferingId}.jpg"
             filePath = os.path.join('app', 'static', 'image', imageName)
             image.save(filePath)
 
@@ -495,13 +495,13 @@ def editSideOffering():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
         if 'editImage' in request.files and request.files['editImage'].filename != '':
-            image = request.files.get('editImage')                
-            imageName = f"{sideOfferingId}.jpg"                
+            image = request.files.get('editImage')
+            imageName = f"{sideOfferingId}.jpg"
             filePath = os.path.join('app', 'static', 'image', imageName)
             image.save(filePath)
 
         cursor.execute('UPDATE sideOfferings SET offeringName=%s, description=%s, price=%s, preparetime=%s WHERE sideOfferingID=%s', (editOfferingName, editDescription, editPrice, editPrepareTime, sideOfferingId))
-        
+
         mysql.connection.commit()
         cursor.close()
 
@@ -529,16 +529,16 @@ def addDrink():
         preparetime = request.form['preparetime']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         cursor.execute('INSERT INTO drinks (drinkName, description, price, preparetime) VALUES (%s, %s, %s, %s)', (drinkName, description, price, preparetime))
         drinkID = cursor.lastrowid  # fetch the id of the drink that was just inserted
-        
+
         if 'drinkImage' in request.files and request.files['drinkImage'].filename != '':
-            drinkImage = request.files.get('drinkImage')                
-            imageName = f"{drinkID}.jpg"                
+            drinkImage = request.files.get('drinkImage')
+            imageName = f"{drinkID}.jpg"
             filePath = os.path.join('app', 'static', 'image', imageName)
             drinkImage.save(filePath)
-        
+
         mysql.connection.commit()
         cursor.close()
 
@@ -557,17 +557,17 @@ def editDrink():
         preparetime = request.form['preparetime']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         # Updating the drink's data in the database
         cursor.execute('UPDATE drinks SET drinkName = %s, description = %s, price = %s, preparetime = %s WHERE drinkID = %s', (drinkName, description, price, preparetime, drinkId))
-        
+
         # If a new image is uploaded, save it
         if 'drinkImage' in request.files and request.files['drinkImage'].filename != '':
-            drinkImage = request.files.get('drinkImage')                
-            imageName = f"{drinkId}.jpg"                
+            drinkImage = request.files.get('drinkImage')
+            imageName = f"{drinkId}.jpg"
             filePath = os.path.join('app', 'static', 'image', imageName)
             drinkImage.save(filePath)
-        
+
         mysql.connection.commit()
         cursor.close()
 
@@ -582,9 +582,9 @@ def deleteDrink():
         drinkId = request.form['id']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         cursor.execute('UPDATE drinks SET drinkActive = FALSE WHERE drinkID = %s', [drinkId])
-        
+
         mysql.connection.commit()
         cursor.close()
 
@@ -602,12 +602,12 @@ def addTopping():
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('INSERT INTO toppings (toppingName, description, price) VALUES (%s, %s, %s)', (toppingName, description, price))
-        
+
         toppingId = cursor.lastrowid
-        
+
         if 'toppingImage' in request.files and request.files['toppingImage'].filename != '':
-            toppingImage = request.files.get('toppingImage')                
-            imageName = f"{toppingId}.jpg"                
+            toppingImage = request.files.get('toppingImage')
+            imageName = f"{toppingId}.jpg"
             filePath = os.path.join('app', 'static', 'image', imageName)
             toppingImage.save(filePath)
 
@@ -631,11 +631,11 @@ def editTopping():
 
         # update the topping's data in the database
         cursor.execute('UPDATE toppings SET toppingName = %s, description = %s, price = %s WHERE toppingID = %s', (toppingName, description, price, toppingId))
-        
+
         # if a new image is uploaded, save it
         if 'toppingImage' in request.files and request.files['toppingImage'].filename != '':
-            toppingImage = request.files.get('toppingImage')                
-            imageName = f"{toppingId}.jpg"                
+            toppingImage = request.files.get('toppingImage')
+            imageName = f"{toppingId}.jpg"
             filePath = os.path.join('app', 'static', 'image', imageName)
             toppingImage.save(filePath)
 
@@ -669,22 +669,22 @@ def nationalPromotions():
      if 'loggedin' in session and session['role'] == 'HQ_Admin':
         branchAdminID = session['id']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         cursor.execute('SELECT * FROM simplepromotions WHERE branchID IS NOT NULL AND sPromoActive = TRUE')
         branchPromotions = cursor.fetchall()
-        
+
         cursor.execute('SELECT * FROM simplepromotions WHERE branchID IS NULL AND sPromoActive = TRUE')
         nationalPromotions = cursor.fetchall()
-        
+
         return render_template('nationalPromotions.html', branchPromotions=branchPromotions, nationalPromotions=nationalPromotions)
 
 
 @bp.route('/nationalAddPromotion', methods=['POST'])
-def nationalAddPromotion():    
+def nationalAddPromotion():
     if 'loggedin' in session and session['role'] == 'HQ_Admin':
         branchAdminID = session['id']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)       
-        
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
         promoType = request.form['promoType']
         startDate = request.form['startDate']
         endDate = request.form['endDate']
@@ -692,19 +692,19 @@ def nationalAddPromotion():
         discountAmount = request.form['discountAmount']
         code = request.form['code']
         description = request.form['description']
-        
+
         cursor.execute('INSERT INTO simplepromotions (promoType,  description, startDate, endDate, thresholdAmount, discountAmount, code, sPromoActive) VALUES (%s,  %s, %s, %s, %s, %s, %s, TRUE)', (promoType, description, startDate, endDate, thresholdAmount,discountAmount, code))
-       
+
         mysql.connection.commit()
         cursor.close()
 
         return jsonify(success=True)
 
     return jsonify(success=False, message="Unauthorized access.")
-    
+
 @bp.route('/nationalUpdatePromotion', methods=['POST'])
-def nationalUpdatePromotion():    
-    if 'loggedin' in session and session['role'] == 'HQ_Admin':       
+def nationalUpdatePromotion():
+    if 'loggedin' in session and session['role'] == 'HQ_Admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         promoID = request.form['promoID']
         promoType = request.form['promoType']
@@ -717,7 +717,7 @@ def nationalUpdatePromotion():
         if promoType:
             cursor.execute("""
                 UPDATE simplepromotions SET promoType = %s, startDate = %s, endDate = %s, thresholdAmount = %s, discountAmount = %s,  code = %s, description = %s
-                WHERE promoID = %s 
+                WHERE promoID = %s
             """, (promoType, startDate, endDate, thresholdAmount, discountAmount, code, description, promoID))
         mysql.connection.commit()
         cursor.close()

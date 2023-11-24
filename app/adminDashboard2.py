@@ -47,10 +47,10 @@ def adminDashboard2():
         cursor.execute(
             'SELECT branchID FROM branches WHERE branchAdminID = %s', (branchAdminID,))
         branch_data = cursor.fetchone()
-        branchID = branch_data['branchID']       
+        branchID = branch_data['branchID']
 
         cursor.execute('SELECT COUNT(staffID) FROM branchStaffs WHERE branchID=%s AND staffActive = 1',(branchID,))
-        staff_count = cursor.fetchone()        
+        staff_count = cursor.fetchone()
 
         cursor.execute('''
             SELECT
@@ -63,7 +63,7 @@ def adminDashboard2():
                 AND orderActive = 1
             GROUP BY orderDay
             ORDER BY orderDay;''')
-        order_data = cursor.fetchall()        
+        order_data = cursor.fetchall()
 
         cursor.execute('SELECT COUNT(promoID) FROM simplepromotions WHERE branchID IS NULL')
         nationalPromotionsNum = cursor.fetchone()
@@ -74,7 +74,7 @@ def adminDashboard2():
         cursor.execute('SELECT COUNT(pizzaName) FROM pizzas WHERE branchID = %s',(branchID,))
         pizzaNum = cursor.fetchone()
 
-        cursor.execute('SELECT COUNT(sideOfferingID) FROM sideofferings WHERE branchID = %s',(branchID,))
+        cursor.execute('SELECT COUNT(sideOfferingID) FROM sideOfferings WHERE branchID = %s',(branchID,))
         sideOfferingNum = cursor.fetchone()
 
         cursor.execute('SELECT COUNT(drinkID) FROM drinks WHERE branchID = %s',(branchID,))
@@ -85,12 +85,12 @@ def adminDashboard2():
     else:
         flash('Please login as branch admin!')
         return redirect(url_for('login.login'))
-    
+
 @bp.route('/adminDashboard2/reports', methods=['GET'])
 def reports():
     if not 'loggedin' in session or session['role'] != 'branch_Admin':
         return redirect(url_for('login.login'))
-    
+
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     branchAdminID = session['id']
 
@@ -99,12 +99,12 @@ def reports():
     cursor.execute(
         'SELECT branchID FROM branches WHERE branchAdminID = %s', (branchAdminID,))
     branch_data = cursor.fetchone()
-    branchID = branch_data['branchID']    
+    branchID = branch_data['branchID']
     # Fetch info from the database
 
     branch = {}
 
-    cursor.execute('SELECT * FROM simplePromotions WHERE sPromoActive = TRUE AND branchID = %s;', (branchID,))
+    cursor.execute('SELECT * FROM simplepromotions WHERE sPromoActive = TRUE AND branchID = %s;', (branchID,))
     branch['simplePromo'] = cursor.fetchall()
 
     for i in branch['simplePromo']:
@@ -176,7 +176,7 @@ def reports():
             cursor.execute("SELECT * FROM drinks WHERE drinkID = %s;", (i['productID'],))
             productName = cursor.fetchone()
             i['productID'] = productName['drinkName']
-    
+
     branch['totalAmounts'] = totalAmount
     branch['totalOrder'] = totalOrder
     branch['totalCustomer'] = totalCustomer
@@ -184,7 +184,7 @@ def reports():
     branch['topProducts30'] = topProducts30
     branch['topProductsAll'] = topProductsAll
 
-    return render_template('branchReports.html', branchInfo=simplejson.dumps(branch, use_decimal=True)) 
+    return render_template('branchReports.html', branchInfo=simplejson.dumps(branch, use_decimal=True))
 
 
 
@@ -311,9 +311,9 @@ def updateProfile():
         userID = request.form.get('userID')
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # Fetch admininfo from the database
-        cursor.execute('''SELECT users.userID, users.userName, users.userPassword, admininfo.title, admininfo.firstName, admininfo.lastName, admininfo.phoneNumber 
-                       FROM admininfo JOIN users 
-                       ON admininfo.userID = users.userID 
+        cursor.execute('''SELECT users.userID, users.userName, users.userPassword, admininfo.title, admininfo.firstName, admininfo.lastName, admininfo.phoneNumber
+                       FROM admininfo JOIN users
+                       ON admininfo.userID = users.userID
                        WHERE admininfo.adminActive=True AND admininfo.userID = %s''', (userID,))
         account = cursor.fetchone()
 
@@ -386,7 +386,7 @@ def branchStaffs():
         '''
         cursor.execute(query, (branchID,))
         staff_data = cursor.fetchall()
-        
+
         return render_template('branchStaffs.html', staffs=staff_data)
     return redirect(url_for('login.login'))
 
@@ -403,7 +403,7 @@ def branchProducts():
         branch = cursor.fetchone()
         branchID = branch['branchID']
 
-        # fetch the pizzas, side offerings and drinks for the given branchID         # AND pizzaActive = TRUE 
+        # fetch the pizzas, side offerings and drinks for the given branchID         # AND pizzaActive = TRUE
         cursor.execute(
             'SELECT * FROM pizzas WHERE branchID = %s ORDER BY pizzaName', (branchID,))
         pizzas = cursor.fetchall()
@@ -629,7 +629,7 @@ def branchUpdatePizza():
         # Fetch the existing sizes for the given pizza name
         cursor.execute('SELECT size FROM pizzas WHERE pizzaName = %s AND branchID = %s AND pizzaActive = TRUE',
                        (pizzaOriginalName, branchID))
-        existing_sizes = [row['size'] for row in cursor.fetchall()]        
+        existing_sizes = [row['size'] for row in cursor.fetchall()]
 
         for existing_size in existing_sizes:
             # Only update if we have data for this size
@@ -638,7 +638,7 @@ def branchUpdatePizza():
                 preparetime = request.form[f'{existing_size.lower()}PrepareTime']
 
                 cursor.execute("""
-                    UPDATE pizzas SET pizzaName = %s, description = %s, price = %s, preparetime = %s 
+                    UPDATE pizzas SET pizzaName = %s, description = %s, price = %s, preparetime = %s
                     WHERE pizzaName = %s AND size = %s AND branchID = %s
                 """, (pizzaNewName, description, price, preparetime, pizzaOriginalName, existing_size, branchID))
 
@@ -677,15 +677,15 @@ def branchPromotions():
         branchID = branch['branchID']
         cursor.execute('SELECT * FROM simplepromotions WHERE branchID = %s AND sPromoActive = TRUE', (branchID,))
         branchPromotions = cursor.fetchall()
-        
+
         cursor.execute('SELECT * FROM simplepromotions WHERE branchID IS NULL AND sPromoActive = TRUE')
         nationalPromotions = cursor.fetchall()
-        
+
         return render_template('branchPromotions.html', branchPromotions=branchPromotions, nationalPromotions=nationalPromotions)
 
 
 @bp.route('/branchAddPromotion', methods=['POST'])
-def branchAddPromotion():    
+def branchAddPromotion():
     if 'loggedin' in session and session['role'] == 'branch_Admin':
         branchAdminID = session['id']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -695,7 +695,7 @@ def branchAddPromotion():
             'SELECT branchID FROM branches WHERE branchAdminID = %s', (branchAdminID,))
         branch = cursor.fetchone()
         branchID = branch['branchID']
-        
+
         promoType = request.form['promoType']
         startDate = request.form['startDate']
         endDate = request.form['endDate']
@@ -703,18 +703,18 @@ def branchAddPromotion():
         discountAmount = request.form['discountAmount']
         code = request.form['code']
         description = request.form['description']
-        
+
         cursor.execute('INSERT INTO simplepromotions (promoType, branchID, description, startDate, endDate, thresholdAmount, discountAmount, code, sPromoActive) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE)', (promoType, branchID, description, startDate, endDate, thresholdAmount,discountAmount, code))
-       
+
         mysql.connection.commit()
         cursor.close()
 
         return jsonify(success=True)
 
     return jsonify(success=False, message="Unauthorized access.")
-    
+
 @bp.route('/branchUpdatePromotion', methods=['POST'])
-def branchUpdatePromotion():    
+def branchUpdatePromotion():
     if 'loggedin' in session and session['role'] == 'branch_Admin':
         branchAdminID = session['id']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -735,14 +735,14 @@ def branchUpdatePromotion():
         description = request.form['description']
         # print('111111111')
         # print(code)
-    
+
         if promoType:
             cursor.execute("""
                 UPDATE simplepromotions SET promoType = %s, startDate = %s, endDate = %s, thresholdAmount = %s, discountAmount = %s,  code = %s, description = %s
                 WHERE promoID = %s  AND branchID = %s
             """, (promoType, startDate, endDate, thresholdAmount, discountAmount, code, description, promoID, branchID))
 
-       
+
 
         mysql.connection.commit()
         cursor.close()

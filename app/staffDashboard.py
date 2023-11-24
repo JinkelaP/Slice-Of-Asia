@@ -41,7 +41,7 @@ def passwordEncrypt(userPassword):
 def getStaffID(userID):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute(
-        'SELECT staffID from branchstaffs WHERE userID = %s;', (userID,))
+        'SELECT staffID from branchStaffs WHERE userID = %s;', (userID,))
     return cursor.fetchone()['staffID']
 
 
@@ -123,7 +123,7 @@ def staffDashboard():
 
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute(
-                'SELECT branchstaffs.branchID FROM branchstaffs WHERE branchstaffs.userID = %s', (userID,))
+                'SELECT branchStaffs.branchID FROM branchStaffs WHERE branchStaffs.userID = %s', (userID,))
             branchID = cursor.fetchone()['branchID']
             # cursor.execute('''SELECT
             #             orders.orderID, orders.customerID, orders.addressDelivery, orders.orderStatus, orders.orderDate, orders.estimatedTime, orders.deliveryOption,
@@ -176,7 +176,7 @@ def staffProfile():
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             # Fetch staffinfo from the database
             cursor.execute(
-                'SELECT users.userID, users.userName, users.userPassword, branchstaffs.title, branchstaffs.firstName, branchstaffs.lastName, branchstaffs.phoneNumber FROM branchstaffs JOIN users ON branchstaffs.userID = users.userID WHERE branchstaffs.userID = %s', (session['id'],))
+                'SELECT users.userID, users.userName, users.userPassword, branchStaffs.title, branchStaffs.firstName, branchStaffs.lastName, branchStaffs.phoneNumber FROM branchStaffs JOIN users ON branchStaffs.userID = users.userID WHERE branchStaffs.userID = %s', (session['id'],))
             staffInfo = cursor.fetchone()
             return render_template('staffProfile.html', staffInfo=staffInfo)
         else:
@@ -191,10 +191,10 @@ def updateProfile():
         userID = request.form.get('userID')
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # Fetch staffinfo from the database
-        cursor.execute('''SELECT users.userID, users.userName, users.userPassword, branchstaffs.title, branchstaffs.firstName, branchstaffs.lastName, branchstaffs.phoneNumber 
-                       FROM branchstaffs JOIN users 
-                       ON branchstaffs.userID = users.userID 
-                       WHERE branchstaffs.staffActive=True AND branchstaffs.userID = %s''', (userID,))
+        cursor.execute('''SELECT users.userID, users.userName, users.userPassword, branchStaffs.title, branchStaffs.firstName, branchStaffs.lastName, branchStaffs.phoneNumber 
+                       FROM branchStaffs JOIN users 
+                       ON branchStaffs.userID = users.userID 
+                       WHERE branchStaffs.staffActive=True AND branchStaffs.userID = %s''', (userID,))
         account = cursor.fetchone()
 
         if account:
@@ -239,7 +239,7 @@ def updateProfile():
                 avatar.save(filePath)
 
             if firstName != account['firstName'] or lastName != account['lastName'] or phoneNumber != account['phoneNumber'] or title != account['title']:
-                cursor.execute('UPDATE branchstaffs SET firstName=%s,lastName=%s,phoneNumber=%s,title=%s WHERE branchstaffs.userID = %s', (
+                cursor.execute('UPDATE branchStaffs SET firstName=%s,lastName=%s,phoneNumber=%s,title=%s WHERE branchStaffs.userID = %s', (
                     firstName, lastName, phoneNumber, title, userID,))
                 mysql.connection.commit()
                 flash('Profile information updated successfully!', 'success')
